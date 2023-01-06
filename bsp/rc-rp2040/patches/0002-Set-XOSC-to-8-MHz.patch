@@ -1,0 +1,37 @@
+From 8650c234dee3504a18db9c972c847820742a2881 Mon Sep 17 00:00:00 2001
+From: Victor-Stefan Jach <14238510+vjach@users.noreply.github.com>
+Date: Fri, 6 Jan 2023 16:47:32 +0100
+Subject: [PATCH] Set XOSC to 8 MHz
+
+Signed-off-by: Victor-Stefan Jach <14238510+vjach@users.noreply.github.com>
+---
+ src/rp2_common/hardware_clocks/clocks.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/rp2_common/hardware_clocks/clocks.c b/src/rp2_common/hardware_clocks/clocks.c
+index 9ba51f0..39d68ed 100644
+--- a/src/rp2_common/hardware_clocks/clocks.c
++++ b/src/rp2_common/hardware_clocks/clocks.c
+@@ -153,7 +153,7 @@ void clocks_init(void) {
+     /// \end::pll_settings[]
+ 
+     /// \tag::pll_init[]
+-    pll_init(pll_sys, 1, 1500 * MHZ, 6, 2);
++    pll_init(pll_sys, 1, 1000 * MHZ, 4, 2);
+     pll_init(pll_usb, 1, 1200 * MHZ, 5, 5);
+     /// \end::pll_init[]
+ 
+@@ -162,8 +162,8 @@ void clocks_init(void) {
+     clock_configure(clk_ref,
+                     CLOCKS_CLK_REF_CTRL_SRC_VALUE_XOSC_CLKSRC,
+                     0, // No aux mux
+-                    12 * MHZ,
+-                    12 * MHZ);
++                    8 * MHZ,
++                    8 * MHZ);
+ 
+     /// \tag::configure_clk_sys[]
+     // CLK SYS = PLL SYS (125MHz) / 1 = 125MHz
+-- 
+2.25.1
+

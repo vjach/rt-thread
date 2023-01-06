@@ -1,0 +1,47 @@
+From ca1e4c6fc9e8dce106c35dbbfa5efcfc4892184c Mon Sep 17 00:00:00 2001
+From: Victor-Stefan Jach <14238510+vjach@users.noreply.github.com>
+Date: Thu, 5 Jan 2023 15:00:14 +0100
+Subject: [PATCH] Weaken panic() and _exit() functions
+
+In RT-Thread these are already defined.
+TODO: mechanism for user supplied panic and _exit
+
+Signed-off-by: Victor-Stefan Jach <14238510+vjach@users.noreply.github.com>
+---
+ src/rp2_common/pico_runtime/runtime.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/rp2_common/pico_runtime/runtime.c b/src/rp2_common/pico_runtime/runtime.c
+index 70dd3bb..2300d3e 100644
+--- a/src/rp2_common/pico_runtime/runtime.c
++++ b/src/rp2_common/pico_runtime/runtime.c
+@@ -175,7 +175,7 @@ void runtime_init(void) {
+ 
+ }
+ 
+-void __attribute__((noreturn)) _exit(__unused int status) {
++void __attribute__((weak, noreturn)) _exit(__unused int status) {
+ #if PICO_ENTER_USB_BOOT_ON_EXIT
+     reset_usb_boot(0,0);
+ #else
+@@ -242,7 +242,7 @@ void __attribute__((noreturn)) panic_unsupported() {
+ extern void __attribute__((noreturn)) __printflike(1, 0) PICO_PANIC_FUNCTION(__unused const char *fmt, ...);
+ #endif
+ // Use a forwarding method here as it is a little simpler than renaming the symbol as it is used from assembler
+-void __attribute__((naked, noreturn)) __printflike(1, 0) panic(__unused const char *fmt, ...) {
++void __attribute__((weak, naked, noreturn)) __printflike(1, 0) panic(__unused const char *fmt, ...) {
+     // if you get an undefined reference here, you didn't define your PICO_PANIC_FUNCTION!
+     __asm (
+             "push {lr}\n"
+@@ -262,7 +262,7 @@ void __attribute__((naked, noreturn)) __printflike(1, 0) panic(__unused const ch
+ //  more importantly there may be no stdout/UART initialized yet
+ // todo we may want to think about where we print panic messages to; writing to USB appears to work
+ //  though it doesn't seem like we can expect it to... fine for now
+-void __attribute__((noreturn)) __printflike(1, 0) panic(const char *fmt, ...) {
++void __attribute__((weak, noreturn)) __printflike(1, 0) panic(const char *fmt, ...) {
+     puts("\n*** PANIC ***\n");
+     if (fmt) {
+ #if LIB_PICO_PRINTF_NONE
+-- 
+2.25.1
+
