@@ -14,7 +14,9 @@ FetchContent_Declare(
     GIT_SHALLOW TRUE
     GIT_PROGRESS TRUE
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libraries/pico-sdk
-    PATCH_COMMAND git am ${CMAKE_CURRENT_SOURCE_DIR}/patches
+    PATCH_COMMAND git am
+    ${CMAKE_CURRENT_SOURCE_DIR}/patches/0001-Weaken-panic-and-_exit-functions.patch
+    ${CMAKE_CURRENT_SOURCE_DIR}/patches/0002-Set-XOSC-to-8-MHz.patch
     )
 if(NOT pico_sdk__POPULATED)
     FetchContent_Populate(pico_sdk)
