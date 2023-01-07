@@ -193,6 +193,7 @@ SET(PROJECT_SOURCES
 	board/board.c
 	drivers/drv_gpio.c
 	drivers/drv_uart.c
+	drivers/drv_i2c.c
 	../../components/finsh/cmd.c
 	../../components/finsh/msh.c
 	../../components/finsh/shell.c
