@@ -190,6 +190,8 @@ SET(PROJECT_SOURCES
 	../../components/drivers/ipc/workqueue.c
 	../../components/drivers/misc/pin.c
 	../../components/drivers/serial/serial.c
+	../../components/drivers/i2c/i2c_dev.c
+	../../components/drivers/i2c/i2c_core.c
 	board/board.c
 	drivers/drv_gpio.c
 	drivers/drv_uart.c
