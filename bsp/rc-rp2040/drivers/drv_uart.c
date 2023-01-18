@@ -152,7 +152,6 @@ int rt_hw_uart_init(void)
 
     return ret;
 }
-// INIT_DEVICE_EXPORT(rt_hw_uart_init);
 
 // We are using pins 0 and 1, but see the GPIO function select table in the
 // datasheet for information on which other pins can be used.
@@ -279,4 +278,3 @@ int rt_hw_uart1_init(void)
 
     return ret;
 }
-INIT_DEVICE_EXPORT(rt_hw_uart1_init);
