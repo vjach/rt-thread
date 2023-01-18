@@ -34,6 +34,7 @@ set(PICO_INCLUDES
 	libraries/pico-sdk/src/rp2_common/hardware_claim/include
 	libraries/pico-sdk/src/rp2_common/hardware_sync/include
 	libraries/pico-sdk/src/rp2_common/hardware_uart/include
+	libraries/pico-sdk/src/rp2_common/hardware_adc/include
 	libraries/pico-sdk/src/rp2_common/hardware_dma/include
 	libraries/pico-sdk/src/rp2_common/hardware_spi/include
 	libraries/pico-sdk/src/rp2_common/hardware_i2c/include
@@ -88,6 +89,7 @@ target_include_directories(rtthread_headers INTERFACE
 	libraries/pico-sdk/src/rp2040/hardware_structs/include
 	libraries/pico-sdk/src/rp2_common/hardware_claim/include
 	libraries/pico-sdk/src/rp2_common/hardware_sync/include
+	libraries/pico-sdk/src/rp2_common/hardware_adc/include
 	libraries/pico-sdk/src/rp2_common/hardware_uart/include
 	libraries/pico-sdk/src/rp2_common/hardware_dma/include
 	libraries/pico-sdk/src/rp2_common/hardware_spi/include
@@ -189,11 +191,13 @@ SET(PROJECT_SOURCES
 	../../components/drivers/ipc/waitqueue.c
 	../../components/drivers/ipc/workqueue.c
 	../../components/drivers/misc/pin.c
+	../../components/drivers/misc/adc.c
 	../../components/drivers/serial/serial.c
 	../../components/drivers/i2c/i2c_dev.c
 	../../components/drivers/i2c/i2c_core.c
 	board/board.c
 	drivers/drv_gpio.c
+	drivers/drv_adc.c
 	drivers/drv_uart.c
 	drivers/drv_i2c.c
 	../../components/finsh/cmd.c
@@ -217,6 +221,7 @@ SET(PROJECT_SOURCES
 	libraries/pico-sdk/src/rp2_common/pico_float/float_math.c
 	libraries/pico-sdk/src/rp2_common/hardware_gpio/gpio.c
 	libraries/pico-sdk/src/rp2_common/hardware_dma/dma.c
+	libraries/pico-sdk/src/rp2_common/hardware_adc/adc.c
 	libraries/pico-sdk/src/common/pico_time/time.c
 	libraries/pico-sdk/src/rp2_common/pico_bit_ops/bit_ops_aeabi.S
 	libraries/pico-sdk/src/rp2_common/pico_stdlib/stdlib.c
