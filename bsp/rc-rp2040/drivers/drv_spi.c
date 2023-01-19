@@ -12,45 +12,62 @@
 #include <rtdevice.h>
 
 #include "drv_spi.h"
+#include "hardware/spi.h"
+#include "hardware/gpio.h"
+
+// DEBUG:
+#define BSP_USING_SPI0_BUS
+#define BSP_USING_SPI0_DEVICE0
 
 #ifdef RT_USING_SPI
 
-struct rp2040_spi_hw_config {
+struct rp2040_spi_hw {
+    spi_inst_t* internal_bus_device;
+    struct rt_spi_bus bus_device;
+    rt_uint32_t baudrate;
+    rt_uint8_t miso_pin;
+    rt_uint8_t mosi_pin;
+    rt_uint8_t sck_pin;
 };
 
 struct rp2040_spi_device {
-    char *device_name;
-    struct rt_spi_bus *spi_bus;
-    struct rt_spi_device *spi_device;
-    struct rp2040_spi_hw_config *spi_hw_config;
-    uint8_t cs_pin;
+  const char* device_name;
+  struct rt_spi_device spi_device;
 };
 
 
 #if defined (BSP_USING_SPI0_BUS)
 
 #define SPI0_BUS_NAME      "spi0"
-#define SPI0_DEVICE0_NAME  "spi0.0"
-#define SPI0_DEVICE1_NAME  "spi0.1"
-#define SPI0_DEVICE2_NAME  "spi0.2"
-#define SPI0_DEVICE3_NAME  "spi0.3"
+static struct rp2040_spi_hw spi0_hw_dev = {
+  .internal_bus_device = spi0,
+  .baudrate = 5000000,
+  .miso_pin = 3,
+  .mosi_pin = 0, 
+  .sck_pin = 2, 
+};
 
-struct rt_spi_bus spi0_bus;
+
 
 #if defined (BSP_USING_SPI0_DEVICE0)
-static struct rt_spi_device spi0_device0;
-#endif
+
+#define SPI0_DEVICE0_NAME  "spi0.0"
+static struct rp2040_spi_device spi0_device0 = {
+  .device_name = SPI0_DEVICE0_NAME,
+};
 
 #endif
 
-static rt_err_t spi_configure(struct rt_spi_device *device, struct rt_spi_configuration *cfg)
+#endif
+
+static rt_err_t rp2040_spi_configure(struct rt_spi_device *device, struct rt_spi_configuration *cfg)
 {
     RT_ASSERT(device != RT_NULL);
     RT_ASSERT(cfg != RT_NULL);
     // TODO:
 }
 
-static rt_uint32_t spi_xfer(struct rt_spi_device *device, struct rt_spi_message *message)
+static rt_uint32_t rp2040_spi_xfer(struct rt_spi_device *device, struct rt_spi_message *message)
 {
     rt_err_t res;
     rt_uint8_t flag;
@@ -60,26 +77,54 @@ static rt_uint32_t spi_xfer(struct rt_spi_device *device, struct rt_spi_message 
     RT_ASSERT(message != RT_NULL);
     RT_ASSERT(message->send_buf != RT_NULL || message->recv_buf != RT_NULL);
     struct rt_spi_configuration config = device->config;
-  //  struct raspi_spi_device * hw_config = (struct raspi_spi_device *)device->parent.user_data;
-  // TODO:
+    struct rp2040_spi_hw* hw = (struct rp2040_spi_hw *)device->bus->parent.user_data;
+    //
+  // TODO: set speed
+    for (struct rt_spi_message* current_message = message; current_message != RT_NULL; current_message = current_message->next) {
+      if (message->send_buf != RT_NULL && message->recv_buf != RT_NULL) {
+        spi_write_read_blocking(hw->internal_bus_device, current_message->send_buf, current_message->recv_buf, current_message->length);
+      } else if (message->send_buf != RT_NULL) {
+      } else {
+      }
+    }
 }
 
-static struct rt_spi_ops raspi_spi_ops =
+static struct rt_spi_ops rp2040_spi_ops =
 {
-    .configure = spi_configure,
-    .xfer = spi_xfer
+    .configure = rp2040_spi_configure,
+    .xfer = rp2040_spi_xfer
 };
 
-rt_err_t rp2040_spi_bus_attach_device(const char *bus_name, struct raspi_spi_device *device)
+rt_err_t rp2040_spi_bus_attach_device(const char *bus_name, struct rp2040_spi_device *device)
 {
     rt_err_t ret;
     RT_ASSERT(device != RT_NULL);
-    ret = rt_spi_bus_attach_device(device->spi_device, device->device_name, bus_name, (void *)(device));
+    ret = rt_spi_bus_attach_device(&device->spi_device, device->device_name, bus_name, (void *)(device));
     return ret;
 }
 
-rt_err_t rp2040_spi_hw_init(struct rp2040_spi_hw_config *hwcfg) {
+rt_err_t rp2040_spi_hw_init(struct rp2040_spi_hw *hw) {
+  gpio_set_function(hw->miso_pin, GPIO_FUNC_SPI);
+  gpio_set_function(hw->mosi_pin, GPIO_FUNC_SPI);
+  gpio_set_function(hw->sck_pin, GPIO_FUNC_SPI);
+  spi_init(hw->internal_bus_device, hw->baudrate);
 }
+
+int rt_hw_spi_init(void)
+{
+#if defined (BSP_USING_SPI0_BUS)
+    rp2040_spi_hw_init(&spi0_hw_dev);
+    rt_spi_bus_register(&spi0_hw_dev.bus_device, SPI0_BUS_NAME, &rp2040_spi_ops);
+    spi0_hw_dev.bus_device.parent.user_data = &spi0_hw_dev;
+
+#if defined (BSP_USING_SPI0_DEVICE0)
+    rp2040_spi_bus_attach_device(SPI0_DEVICE0_NAME, &spi0_device0);
+#endif
+#endif
+    return RT_EOK;
+}
+
+INIT_DEVICE_EXPORT(rt_hw_spi_init);
 
 #if 0
 rt_err_t raspi_spi_bus_attach_device(const char *bus_name, struct raspi_spi_device *device)
@@ -136,40 +181,5 @@ struct raspi_spi_hw_config raspi_spi0_hw =
 };
 #endif
 
-#if defined (BSP_USING_SPI0_DEVICE0)
-struct raspi_spi_device raspi_spi0_device0 =
-{
-    .device_name = SPI0_DEVICE0_NAME,
-    .spi_bus = &spi0_bus,
-    .spi_device = &spi0_device0,
-    .spi_hw_config = &raspi_spi0_hw,
-    .cs_pin = GPIO_PIN_8,
-};
 #endif
 
-#if defined (BSP_USING_SPI0_DEVICE1)
-struct raspi_spi_device raspi_spi0_device1 =
-{
-    .device_name = SPI0_DEVICE1_NAME,
-    .spi_bus = &spi0_bus,
-    .spi_device = &spi0_device1,
-    .spi_hw_config = &raspi_spi0_hw,
-    .cs_pin = GPIO_PIN_7,
-};
-#endif
-#endif
-
-int rt_hw_spi_init(void)
-{
-#if defined (BSP_USING_SPI0_BUS)
-    //raspi_spi_hw_init(&raspi_spi0_hw);
-    //rt_spi_bus_register(&spi0_bus, SPI0_BUS_NAME, &raspi_spi_ops);
-
-#if defined (BSP_USING_SPI0_DEVICE0)
-    //raspi_spi_bus_attach_device(SPI0_BUS_NAME, &raspi_spi0_device0);
-#endif
-#endif
-    return RT_EOK;
-}
-
-INIT_DEVICE_EXPORT(rt_hw_spi_init);
