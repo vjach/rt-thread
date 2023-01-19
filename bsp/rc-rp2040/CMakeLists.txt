@@ -195,7 +195,8 @@ SET(PROJECT_SOURCES
 	../../components/drivers/serial/serial.c
 	../../components/drivers/i2c/i2c_dev.c
 	../../components/drivers/i2c/i2c_core.c
-	../../components/drivers/spi/spi.c
+	../../components/drivers/spi/spi_dev.c
+	../../components/drivers/spi/spi_core.c
 	board/board.c
 	drivers/drv_gpio.c
 	drivers/drv_adc.c

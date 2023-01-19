@@ -33,6 +33,7 @@ struct rp2040_spi_hw {
 struct rp2040_spi_device {
   const char* device_name;
   struct rt_spi_device spi_device;
+  rt_uint8_t cs_pin;
 };
 
 
@@ -42,9 +43,9 @@ struct rp2040_spi_device {
 static struct rp2040_spi_hw spi0_hw_dev = {
   .internal_bus_device = spi0,
   .baudrate = 5000000,
-  .miso_pin = 3,
-  .mosi_pin = 0, 
-  .sck_pin = 2, 
+  .miso_pin = 0,
+  .mosi_pin = 2, 
+  .sck_pin = 3, 
 };
 
 
@@ -54,6 +55,7 @@ static struct rp2040_spi_hw spi0_hw_dev = {
 #define SPI0_DEVICE0_NAME  "spi0.0"
 static struct rp2040_spi_device spi0_device0 = {
   .device_name = SPI0_DEVICE0_NAME,
+  .cs_pin = 23,
 };
 
 #endif
@@ -65,6 +67,7 @@ static rt_err_t rp2040_spi_configure(struct rt_spi_device *device, struct rt_spi
     RT_ASSERT(device != RT_NULL);
     RT_ASSERT(cfg != RT_NULL);
     // TODO:
+    return RT_EOK;
 }
 
 static rt_uint32_t rp2040_spi_xfer(struct rt_spi_device *device, struct rt_spi_message *message)
@@ -78,13 +81,23 @@ static rt_uint32_t rp2040_spi_xfer(struct rt_spi_device *device, struct rt_spi_m
     RT_ASSERT(message->send_buf != RT_NULL || message->recv_buf != RT_NULL);
     struct rt_spi_configuration config = device->config;
     struct rp2040_spi_hw* hw = (struct rp2040_spi_hw *)device->bus->parent.user_data;
+    struct rp2040_spi_device* internal_device = (struct rp2040_spi_device*) device->parent.user_data;
+    rt_uint32_t transferred = 0;
     //
   // TODO: set speed
-    for (struct rt_spi_message* current_message = message; current_message != RT_NULL; current_message = current_message->next) {
+    for (struct rt_spi_message* current_message = message; current_message != RT_NULL; current_message = current_message->next, ++transferred) {
+      if (current_message->cs_take) {
+        rt_pin_write(internal_device->cs_pin, 0);
+      }
+
       if (message->send_buf != RT_NULL && message->recv_buf != RT_NULL) {
         spi_write_read_blocking(hw->internal_bus_device, current_message->send_buf, current_message->recv_buf, current_message->length);
       } else if (message->send_buf != RT_NULL) {
       } else {
+      }
+
+      if (current_message->cs_release) {
+        rt_pin_write(internal_device->cs_pin, 1);
       }
     }
 }
@@ -104,10 +117,16 @@ rt_err_t rp2040_spi_bus_attach_device(const char *bus_name, struct rp2040_spi_de
 }
 
 rt_err_t rp2040_spi_hw_init(struct rp2040_spi_hw *hw) {
+  spi_init(hw->internal_bus_device, hw->baudrate);
   gpio_set_function(hw->miso_pin, GPIO_FUNC_SPI);
   gpio_set_function(hw->mosi_pin, GPIO_FUNC_SPI);
   gpio_set_function(hw->sck_pin, GPIO_FUNC_SPI);
-  spi_init(hw->internal_bus_device, hw->baudrate);
+  //spi_set_format(hw->internal_bus_device, 8, 0, 0, SPI_MSB_FIRST);
+}
+
+rt_err_t rp2040_spi_device_init(struct rp2040_spi_device *device) {
+    rt_pin_mode(device->cs_pin, PIN_MODE_OUTPUT);
+    rt_pin_write(device->cs_pin, 1);
 }
 
 int rt_hw_spi_init(void)
@@ -118,7 +137,7 @@ int rt_hw_spi_init(void)
     spi0_hw_dev.bus_device.parent.user_data = &spi0_hw_dev;
 
 #if defined (BSP_USING_SPI0_DEVICE0)
-    rp2040_spi_bus_attach_device(SPI0_DEVICE0_NAME, &spi0_device0);
+    rp2040_spi_bus_attach_device(SPI0_BUS_NAME, &spi0_device0);
 #endif
 #endif
     return RT_EOK;
