@@ -74,6 +74,7 @@ static rt_err_t dma_deinit(struct rp2040_i2c_device_info* i2c_dev_info) {
   if (unclaim_mask) {
     dma_unclaim_mask(unclaim_mask);
   }
+  return RT_EOK;
 }
 
 static rt_err_t rp2040_i2c_device_init(struct rp2040_i2c_device_info* dev_info) {
@@ -83,6 +84,7 @@ static rt_err_t rp2040_i2c_device_init(struct rp2040_i2c_device_info* dev_info) 
   i2c_init(dev_info->dev, 100000);
   irq_set_exclusive_handler(dev_info->irq_number, dev_info->irq_handler);
   i2c_get_hw(dev_info->dev)->dma_cr |= I2C_IC_DMA_CR_TDMAE_VALUE_ENABLED | I2C_IC_DMA_CR_RDMAE_VALUE_ENABLED;
+  return RT_EOK;
 }
 
 static void fill_dma_cmd_buffer(uint16_t* dma_cmd_buffer, struct rt_i2c_msg* msg, bool stop) {
@@ -163,13 +165,6 @@ static rt_err_t i2c_bus_control(struct rt_i2c_bus_device *bus,
                                       rt_uint32_t cmd,
                                       rt_uint32_t arg)
 {
-    return RT_EOK;
-}
-
-
-static rt_err_t i2c_configure(struct rp2040_i2c_device_info *cfg)
-{
-    RT_ASSERT(cfg != RT_NULL);
     return RT_EOK;
 }
 
