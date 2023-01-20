@@ -11,13 +11,12 @@
 #include <rthw.h>
 #include <rtdevice.h>
 
+#include "board.h"
 #include "drv_spi.h"
 #include "hardware/spi.h"
 #include "hardware/gpio.h"
 
 // DEBUG:
-#define BSP_USING_SPI0_BUS
-#define BSP_USING_SPI0_DEVICE0
 
 #ifdef RT_USING_SPI
 
@@ -72,7 +71,7 @@ static struct rp2040_spi_device spi0_device2 = {
 #endif
 
 #if defined (BSP_USING_SPI0_DEVICE3)
-static struct rp2040_spi_device spi0_device2 = {
+static struct rp2040_spi_device spi0_device3 = {
   .device_name = "imu",
   .cs_pin = 28,
 };

@@ -26,4 +26,10 @@ extern int __bss_end__;
 
 int rt_hw_uart_init(void);
 
+#define BSP_USING_SPI0_BUS
+#define BSP_USING_SPI0_DEVICE0
+#define BSP_USING_SPI0_DEVICE1
+#define BSP_USING_SPI0_DEVICE2
+#define BSP_USING_SPI0_DEVICE3
+
 #endif
