@@ -1,13 +1,27 @@
-From 8650c234dee3504a18db9c972c847820742a2881 Mon Sep 17 00:00:00 2001
+From c4cddf823557df3ed48190f585c044f9fe4feaa4 Mon Sep 17 00:00:00 2001
 From: Victor-Stefan Jach <14238510+vjach@users.noreply.github.com>
 Date: Fri, 6 Jan 2023 16:47:32 +0100
 Subject: [PATCH] Set XOSC to 8 MHz
 
 Signed-off-by: Victor-Stefan Jach <14238510+vjach@users.noreply.github.com>
 ---
- src/rp2_common/hardware_clocks/clocks.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ src/host/pico_platform/include/hardware/platform_defs.h | 2 +-
+ src/rp2_common/hardware_clocks/clocks.c                 | 6 +++---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
+diff --git a/src/host/pico_platform/include/hardware/platform_defs.h b/src/host/pico_platform/include/hardware/platform_defs.h
+index 6d0aa84..6f87c00 100644
+--- a/src/host/pico_platform/include/hardware/platform_defs.h
++++ b/src/host/pico_platform/include/hardware/platform_defs.h
+@@ -17,7 +17,7 @@
+ 
+ #define NUM_SPIN_LOCKS 32u
+ 
+-#define XOSC_MHZ 12
++#define XOSC_MHZ 8
+ 
+ #define NUM_SPIN_LOCKS 32u
+ 
 diff --git a/src/rp2_common/hardware_clocks/clocks.c b/src/rp2_common/hardware_clocks/clocks.c
 index 9ba51f0..39d68ed 100644
 --- a/src/rp2_common/hardware_clocks/clocks.c

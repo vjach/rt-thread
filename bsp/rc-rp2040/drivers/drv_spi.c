@@ -89,14 +89,11 @@ static rt_err_t rp2040_spi_configure(struct rt_spi_device *device, struct rt_spi
 
 static rt_uint32_t rp2040_spi_xfer(struct rt_spi_device *device, struct rt_spi_message *message)
 {
-    rt_err_t res;
-    rt_uint8_t flag;
     RT_ASSERT(device != RT_NULL);
     RT_ASSERT(device->bus != RT_NULL);
     RT_ASSERT(device->parent.user_data != RT_NULL);
     RT_ASSERT(message != RT_NULL);
     RT_ASSERT(message->send_buf != RT_NULL || message->recv_buf != RT_NULL);
-    struct rt_spi_configuration config = device->config;
     struct rp2040_spi_hw* hw = (struct rp2040_spi_hw *)device->bus->parent.user_data;
     struct rp2040_spi_device* internal_device = (struct rp2040_spi_device*) device->parent.user_data;
     rt_uint32_t transferred = 0;
@@ -116,6 +113,7 @@ static rt_uint32_t rp2040_spi_xfer(struct rt_spi_device *device, struct rt_spi_m
         rt_pin_write(internal_device->cs_pin, 1);
       }
     }
+    return transferred;
 }
 
 static struct rt_spi_ops rp2040_spi_ops =
@@ -137,12 +135,13 @@ rt_err_t rp2040_spi_hw_init(struct rp2040_spi_hw *hw) {
   gpio_set_function(hw->miso_pin, GPIO_FUNC_SPI);
   gpio_set_function(hw->mosi_pin, GPIO_FUNC_SPI);
   gpio_set_function(hw->sck_pin, GPIO_FUNC_SPI);
-  //spi_set_format(hw->internal_bus_device, 8, 0, 0, SPI_MSB_FIRST);
+  return RT_EOK;
 }
 
 rt_err_t rp2040_spi_device_init(struct rp2040_spi_device *device) {
     rt_pin_mode(device->cs_pin, PIN_MODE_OUTPUT);
     rt_pin_write(device->cs_pin, 1);
+    return RT_EOK;
 }
 
 int rt_hw_spi_init(void)
