@@ -1,13 +1,14 @@
-From c4cddf823557df3ed48190f585c044f9fe4feaa4 Mon Sep 17 00:00:00 2001
+From 7ab815a16c9536f5d19495ec9195978e2af0f7d2 Mon Sep 17 00:00:00 2001
 From: Victor-Stefan Jach <14238510+vjach@users.noreply.github.com>
 Date: Fri, 6 Jan 2023 16:47:32 +0100
 Subject: [PATCH] Set XOSC to 8 MHz
 
 Signed-off-by: Victor-Stefan Jach <14238510+vjach@users.noreply.github.com>
 ---
- src/host/pico_platform/include/hardware/platform_defs.h | 2 +-
- src/rp2_common/hardware_clocks/clocks.c                 | 6 +++---
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ src/host/pico_platform/include/hardware/platform_defs.h   | 2 +-
+ src/rp2040/hardware_regs/include/hardware/platform_defs.h | 2 +-
+ src/rp2_common/hardware_clocks/clocks.c                   | 6 +++---
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/src/host/pico_platform/include/hardware/platform_defs.h b/src/host/pico_platform/include/hardware/platform_defs.h
 index 6d0aa84..6f87c00 100644
@@ -22,6 +23,19 @@ index 6d0aa84..6f87c00 100644
  
  #define NUM_SPIN_LOCKS 32u
  
+diff --git a/src/rp2040/hardware_regs/include/hardware/platform_defs.h b/src/rp2040/hardware_regs/include/hardware/platform_defs.h
+index 21f77ca..5cacb05 100644
+--- a/src/rp2040/hardware_regs/include/hardware/platform_defs.h
++++ b/src/rp2040/hardware_regs/include/hardware/platform_defs.h
+@@ -39,7 +39,7 @@
+ 
+ // PICO_CONFIG: XOSC_MHZ, The crystal oscillator frequency in Mhz, type=int, default=12, advanced=true, group=hardware_base
+ #ifndef XOSC_MHZ
+-#define XOSC_MHZ _u(12)
++#define XOSC_MHZ _u(8)
+ #endif
+ 
+ #endif
 diff --git a/src/rp2_common/hardware_clocks/clocks.c b/src/rp2_common/hardware_clocks/clocks.c
 index 9ba51f0..39d68ed 100644
 --- a/src/rp2_common/hardware_clocks/clocks.c
