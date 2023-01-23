@@ -22,3 +22,16 @@ if(NOT pico_sdk__POPULATED)
     FetchContent_Populate(pico_sdk)
 endif()
 
+function(pico_message_debug MESSAGE)                                                                                                                                                                                           
+  # The log-level system was added in CMake 3.15.                                                                                                                                                                            
+  if(${CMAKE_VERSION} VERSION_LESS "3.15.0")                                                                                                                                                                                 
+    message(${MESSAGE})                                                                                                                                                                                                    
+  else()                                                                                                                                                                                                                     
+    message(DEBUG ${MESSAGE})                                                                                                                                                                                              
+  endif()                                                                                                                                                                                                                    
+endfunction()
+
+set (PICO_SDK_PATH ${CMAKE_CURRENT_SOURCE_DIR}/libraries/pico-sdk)
+
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libraries/pico-sdk/tools/;${CMAKE_MODULE_PATH}")
+find_package(Pioasm REQUIRED)
