@@ -15,5 +15,6 @@
 #include <rtthread.h>
 
 int rt_hw_uart_init(void);
+int rt_hw_uart1_init(void);
 
 #endif
