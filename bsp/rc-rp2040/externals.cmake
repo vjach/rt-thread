@@ -31,7 +31,7 @@ function(pico_message_debug MESSAGE)
   endif()                                                                                                                                                                                                                    
 endfunction()
 
-set (PICO_SDK_PATH ${CMAKE_CURRENT_SOURCE_DIR}/libraries/pico-sdk)
+set (PICO_SDK_PATH ${pico_sdk_SOURCE_DIR})
 
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libraries/pico-sdk/tools/;${CMAKE_MODULE_PATH}")
+set(CMAKE_MODULE_PATH "${pico_sdk_SOURCE_DIR}/tools/;${CMAKE_MODULE_PATH}")
 find_package(Pioasm REQUIRED)
