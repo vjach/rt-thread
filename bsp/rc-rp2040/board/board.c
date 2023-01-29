@@ -68,6 +68,7 @@ void rt_hw_board_init() {
   rt_hw_uart_init();
   rt_hw_sbus_init();
   rt_hw_uart1_init();
+  rt_hw_pwm_init();
 
 #ifdef RT_USING_CONSOLE
   rt_console_set_device(RT_CONSOLE_DEVICE_NAME);

@@ -197,6 +197,7 @@ SET(PROJECT_SOURCES
 	../../components/drivers/i2c/i2c_core.c
 	../../components/drivers/spi/spi_dev.c
 	../../components/drivers/spi/spi_core.c
+  ../../components/drivers/misc/rt_drv_pwm.c
 	board/board.c
 	drivers/drv_gpio.c
 	drivers/drv_adc.c
@@ -204,6 +205,7 @@ SET(PROJECT_SOURCES
 	drivers/drv_i2c.c
 	drivers/drv_spi.c
 	drivers/drv_sbus.c
+	drivers/drv_pwm.c
 	../../components/finsh/cmd.c
 	../../components/finsh/msh.c
 	../../components/finsh/shell.c
