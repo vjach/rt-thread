@@ -25,7 +25,7 @@
 // We are using pins 0 and 1, but see the GPIO function select table in the
 // datasheet for information on which other pins can be used.
 #define UART_TX_PIN 16
-#define UART_RX_PIN 17
+#define UART_RX_PIN 29
 
 #define PICO_UART_DEVICE(uart)    (struct pico_uart_dev *)(uart)
 
@@ -117,15 +117,16 @@ const static struct rt_uart_ops _uart_ops =
  */
 int rt_hw_uart_init(void)
 {
+#if 0
     rt_err_t ret = RT_EOK;
 
     struct serial_configure config = RT_SERIAL_CONFIG_DEFAULT;
 
-    uart_init(UART_ID, 115200);
+    uart_init(UART_ID, 100000);
 
     // Set the TX and RX pins by using the function select on the GPIO
     // Set datasheet for more information on function select
-    gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
+    //gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
     gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
 
     // Actually, we want a different speed
@@ -151,6 +152,8 @@ int rt_hw_uart_init(void)
                                 &uart0_dev);
 
     return ret;
+#endif
+    return 0;
 }
 
 // We are using pins 0 and 1, but see the GPIO function select table in the

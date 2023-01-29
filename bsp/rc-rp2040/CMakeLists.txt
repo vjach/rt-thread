@@ -203,6 +203,7 @@ SET(PROJECT_SOURCES
 	drivers/drv_uart.c
 	drivers/drv_i2c.c
 	drivers/drv_spi.c
+	drivers/drv_sbus.c
 	../../components/finsh/cmd.c
 	../../components/finsh/msh.c
 	../../components/finsh/shell.c
