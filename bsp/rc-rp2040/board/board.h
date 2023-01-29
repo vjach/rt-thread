@@ -25,6 +25,7 @@ extern int __bss_end__;
 #define HEAP_END        ((void *)PICO_SRAM_END)
 
 int rt_hw_uart_init(void);
+int rt_hw_sbus_init(void);
 
 #define BSP_USING_SPI0_BUS
 #define BSP_USING_SPI0_DEVICE0
