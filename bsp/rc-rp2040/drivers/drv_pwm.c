@@ -27,12 +27,14 @@ struct rp2040_pwm_slice {
   uint8_t id;
   uint8_t gpio_a;
   uint8_t gpio_b;
+  uint32_t period;
 };
 
 static struct rp2040_pwm_slice pwm_device0 = {
   .id = 7,
   .gpio_a = 14,
   .gpio_b = 15,
+  .period = 20000000, // 20 ms
 };
 
 static rt_err_t rp2040_drv_pwm_enable(struct rp2040_pwm_slice *pwm_slice, uint8_t channel, rt_bool_t enable)
@@ -58,7 +60,7 @@ static rt_err_t rp2040_drv_pwm_set(struct rp2040_pwm_slice* pwm_slice, uint8_t c
 {
   RT_ASSERT(channel < 2);
 
-  uint16_t counter_value = (uint16_t)(((uint64_t)65536 *  duty) / (20000000));
+  uint16_t counter_value = (uint16_t)(((uint64_t)65536 *  duty) / pwm_slice->period);
   pwm_set_chan_level(pwm_slice->id, channel, counter_value);
   return RT_EOK;
 }
@@ -88,12 +90,11 @@ static rt_err_t rp2040_drv_pwm_init(struct rp2040_pwm_slice* pwm_slice)
   RT_ASSERT(pwm_slice->id == pwm_gpio_to_slice_num(pwm_slice->gpio_a))
   RT_ASSERT(pwm_slice->id == pwm_gpio_to_slice_num(pwm_slice->gpio_b))
 
-#define UPDATE_RATE 50
-
-  uint32_t clk_freq = clock_get_hz(clk_sys);
   pwm_set_chan_level(pwm_slice->id, 0, 1);
   pwm_set_chan_level(pwm_slice->id, 1, 1);
-  pwm_set_clkdiv(pwm_slice->id, (float)clk_freq / (UPDATE_RATE * 65536));
+  uint64_t clk_freq = clock_get_hz(clk_sys);
+  float frequency = 1000000000.f / pwm_slice->period;
+  pwm_set_clkdiv(pwm_slice->id, (float)clk_freq  / (65536 * frequency));
   pwm_set_gpio_level(pwm_slice->gpio_a, 0);
   pwm_set_gpio_level(pwm_slice->gpio_b, 0);
   pwm_set_enabled(pwm_slice->id, true);
