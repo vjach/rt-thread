@@ -33,7 +33,7 @@ struct sbus_dev {
   rt_uint32_t irqno;
   volatile uint8_t offset;
   volatile uint8_t idle;
-  rt_sem_t data_available;
+  struct rt_semaphore data_available;
 
   uint8_t first_buffer[SBUS_BUFFER_SIZE];
   uint8_t second_buffer[SBUS_BUFFER_SIZE];
@@ -91,7 +91,7 @@ void sbus_isr(void) {
       sbus0_dev.complete_buffer = sbus0_dev.incomplete_buffer;
       sbus0_dev.incomplete_buffer = sbus_get_free_buffer(&sbus0_dev);
       sbus0_dev.idle = 0;
-      rt_sem_release(sbus0_dev.data_available);
+      rt_sem_release(&sbus0_dev.data_available);
     }
 
     if (mis & (1 << 6)) {
@@ -108,7 +108,7 @@ rt_err_t sbus_init(rt_device_t dev) {
   sbus->idle = 0;
   sbus->complete_buffer = RT_NULL;
   sbus->incomplete_buffer = sbus_get_free_buffer(sbus);
-  rt_sem_init(sbus->data_available, "sbus_sem", 0,  RT_IPC_FLAG_FIFO);
+  rt_sem_init(&sbus->data_available, "sbus_sem", 0,  RT_IPC_FLAG_FIFO);
 
   // enable uart idle interrupt
   uart_get_hw(uart0)->imsc |= 1 << 6;
@@ -127,7 +127,7 @@ rt_err_t sbus_close(rt_device_t dev) { return RT_EOK; }
 static rt_size_t sbus_read(rt_device_t dev, rt_off_t pos, void* buffer,
                            rt_size_t size) {
   struct sbus_dev* sbus = (struct sbus_dev*)dev->user_data;
-  rt_err_t err = rt_sem_take(sbus->data_available, RT_WAITING_FOREVER);
+  rt_err_t err = rt_sem_take(&sbus->data_available, RT_WAITING_FOREVER);
   if (err != RT_EOK) {
     return 0;
   }
