@@ -14,14 +14,7 @@
 #include "drv_pio_uart.h"
 #include "hardware/pio.h"
 #include "hardware/gpio.h"
-#include "uart_tx_gpio.h"
-
-#define UART3_BAUD_RATE 115200
-
-// We are using pins 0 and 1, but see the GPIO function select table in the
-// datasheet for information on which other pins can be used.
-#define UART_TX_PIN 21
-
+#include "uart_tx.pio.h"
 
 struct rp2040_pio_uart_dev
 {
@@ -29,9 +22,15 @@ struct rp2040_pio_uart_dev
     PIO pio;
     rt_uint32_t state_machine;
     uint8_t gpio_tx;
+    uint32_t baud_rate;
 };
 
-static struct rp2040_pio_uart_dev uart0_dev;
+static struct rp2040_pio_uart_dev uart0_dev = {
+  .pio = pio0,
+  .state_machine = 0,
+  .gpio_tx = 21,
+  .baud_rate = 115200,
+};
 
 static rt_err_t rp2040_pio_uart_configure(struct rt_serial_device *serial, struct serial_configure *cfg)
 {
@@ -64,9 +63,9 @@ const static struct rt_uart_ops _uart_ops =
  */
 int rt_hw_pio_uart_init(void)
 {
-  uint32_t offset = pio_add_program(uart0_dev->pio, &uart_tx_program);
-  uart_tx_program_init(uart0_dev->pio, uart0_dev->state_machine, offset, uart0_dev->gpio_tx, SERIAL_BAUD);
-  gpio_set_function(uart0_dev->gpio_tx, GPIO_FUNC_PIO0);
+  uint32_t offset = pio_add_program(uart0_dev.pio, &uart_tx_program);
+  uart_tx_program_init(uart0_dev.pio, uart0_dev.state_machine, offset, uart0_dev.gpio_tx, uart0_dev.baud_rate);
+  gpio_set_function(uart0_dev.gpio_tx, GPIO_FUNC_PIO0);
 #if 0
     rt_err_t ret = RT_EOK;
 
