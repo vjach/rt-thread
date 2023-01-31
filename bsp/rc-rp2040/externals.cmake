@@ -35,3 +35,4 @@ set (PICO_SDK_PATH ${pico_sdk_SOURCE_DIR})
 
 set(CMAKE_MODULE_PATH "${pico_sdk_SOURCE_DIR}/tools/;${CMAKE_MODULE_PATH}")
 find_package(Pioasm REQUIRED)
+add_subdirectory("${pico_sdk_SOURCE_DIR}/tools")
