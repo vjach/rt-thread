@@ -7,11 +7,11 @@ SET(CMAKE_SYSTEM_PROCESSOR cortex-m0)
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(externals.cmake)
 
-SET(CMAKE_C_FLAGS " -march=armv6-m -mcpu=cortex-m0plus -mthumb -ffunction-sections -fdata-sections -Dgcc -O3 -gdwarf-2 -g")
+SET(CMAKE_C_FLAGS " -march=armv6-m -mcpu=cortex-m0plus -mthumb -ffunction-sections -fdata-sections -Dgcc -O0 -gdwarf-2 -g")
 SET(CMAKE_ASM_FLAGS " -c -march=armv6-m -mcpu=cortex-m0plus -mthumb -ffunction-sections -fdata-sections -x assembler-with-cpp -Wa,-mimplicit-it=thumb -ILibraries/pico-sdk/src/common/pico_stdlib/include -ILibraries/pico-sdk/src/rp2_common/hardware_gpio/include -ILibraries/pico-sdk/src/common/pico_base/include -ILibraries/generated/pico_base -ILibraries/pico-sdk/src/boards/include -ILibraries/pico-sdk/src/rp2_common/pico_platform/include -ILibraries/pico-sdk/src/rp2040/hardware_regs/include -ILibraries/pico-sdk/src/rp2_common/hardware_base/include -ILibraries/pico-sdk/src/rp2040/hardware_structs/include -ILibraries/pico-sdk/src/rp2_common/hardware_claim/include -ILibraries/pico-sdk/src/rp2_common/hardware_sync/include -ILibraries/pico-sdk/src/rp2_common/hardware_uart/include -ILibraries/pico-sdk/src/rp2_common/hardware_divider/include -ILibraries/pico-sdk/src/common/pico_time/include -ILibraries/pico-sdk/src/rp2_common/hardware_timer/include -ILibraries/pico-sdk/src/common/pico_sync/include -ILibraries/pico-sdk/src/common/pico_util/include -ILibraries/pico-sdk/src/rp2_common/pico_runtime/include -ILibraries/pico-sdk/src/rp2_common/hardware_clocks/include -ILibraries/pico-sdk/src/rp2_common/hardware_resets/include -ILibraries/pico-sdk/src/rp2_common/hardware_watchdog/include -ILibraries/pico-sdk/src/rp2_common/hardware_xosc/include -ILibraries/pico-sdk/src/rp2_common/hardware_pll/include -ILibraries/pico-sdk/src/rp2_common/hardware_vreg/include -ILibraries/pico-sdk/src/rp2_common/hardware_irq/include -ILibraries/pico-sdk/src/rp2_common/pico_printf/include -ILibraries/pico-sdk/src/rp2_common/pico_bootrom/include -ILibraries/pico-sdk/src/common/pico_bit_ops/include -ILibraries/pico-sdk/src/common/pico_divider/include -ILibraries/pico-sdk/src/rp2_common/pico_double/include -ILibraries/pico-sdk/src/rp2_common/pico_int64_ops/include -ILibraries/pico-sdk/src/rp2_common/pico_float/include -ILibraries/pico-sdk/src/common/pico_binary_info/include -ILibraries/pico-sdk/src/rp2_common/pico_stdio/include -ILibraries/pico-sdk/src/rp2_common/pico_stdio_uart/include -gdwarf-2")
 SET(CMAKE_C_COMPILER_WORKS TRUE)
 
-SET(CMAKE_CXX_FLAGS " -march=armv6-m -mcpu=cortex-m0plus -mthumb -ffunction-sections -fdata-sections -Dgcc -O3 -gdwarf-2 -g")
+SET(CMAKE_CXX_FLAGS " -march=armv6-m -mcpu=cortex-m0plus -mthumb -ffunction-sections -fdata-sections -Dgcc -O0 -gdwarf-2 -g")
 SET(CMAKE_CXX_COMPILER_WORKS TRUE)
 
 

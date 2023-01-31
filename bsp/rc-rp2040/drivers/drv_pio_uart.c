@@ -29,7 +29,7 @@ static struct rp2040_pio_uart_dev uart0_dev = {
   .pio = pio0,
   .state_machine = 0,
   .gpio_tx = 21,
-  .baud_rate = 115200,
+  .baud_rate = 921600,
 };
 
 static rt_err_t rp2040_pio_uart_configure(struct rt_serial_device *serial, struct serial_configure *cfg)
@@ -44,9 +44,9 @@ static rt_err_t rp2040_pio_uart_control(struct rt_serial_device *serial, int cmd
 
 static int rp2040_pio_uart_putc(struct rt_serial_device *serial, char c)
 {
-    uart_putc_raw(uart0, c);
-
-    return 1;
+  struct rp2040_pio_uart_dev* uart_dev = rt_container_of(serial, struct rp2040_pio_uart_dev, parent);
+  uart_tx_program_putc(uart_dev->pio, uart_dev->state_machine, c);
+  return 1;
 }
 
 const static struct rt_uart_ops _uart_ops =
@@ -66,41 +66,11 @@ int rt_hw_pio_uart_init(void)
   uint32_t offset = pio_add_program(uart0_dev.pio, &uart_tx_program);
   uart_tx_program_init(uart0_dev.pio, uart0_dev.state_machine, offset, uart0_dev.gpio_tx, uart0_dev.baud_rate);
   gpio_set_function(uart0_dev.gpio_tx, GPIO_FUNC_PIO0);
-#if 0
-    rt_err_t ret = RT_EOK;
+  uart0_dev.parent.ops = &_uart_ops;
 
-    struct serial_configure config = RT_SERIAL_CONFIG_DEFAULT;
-
-    uart_init(UART_ID, 100000);
-
-    // Set the TX and RX pins by using the function select on the GPIO
-    // Set datasheet for more information on function select
-    //gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
-    gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
-
-    // Actually, we want a different speed
-    // The call will return the actual baud rate selected, which will be as close as
-    // possible to that requested
-    uart_set_baudrate(UART_ID, BAUD_RATE);
-
-    // Set UART flow control CTS/RTS, we don't want these, so turn them off
-    uart_set_hw_flow(UART_ID, false, false);
-
-    // Set our data format
-    uart_set_format(UART_ID, DATA_BITS, STOP_BITS, PARITY);
-
-    // Turn off FIFO's - we want to do this character by character
-    uart_set_fifo_enabled(UART_ID, false);
-
-    uart0_dev.parent.ops = &_uart_ops;
-    uart0_dev.parent.config = config;
-
-    ret = rt_hw_serial_register(&uart0_dev.parent,
-                                "uart0",
-                                RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX,
+  return rt_hw_serial_register(&uart0_dev.parent,
+                                "uart_dbg",
+                                RT_DEVICE_FLAG_RDONLY,
                                 &uart0_dev);
-
-    return ret;
-#endif
     return 0;
 }

@@ -30,6 +30,8 @@ struct rp2040_pwm_slice {
   uint32_t period;
 };
 
+#define GPIO_DISABLED (255)
+
 static struct rp2040_pwm_slice pwm_slice[4] = {
     {
         .id = 7,
@@ -52,17 +54,17 @@ static struct rp2040_pwm_slice pwm_slice[4] = {
     {
         .id = 2,
         .gpio_a = 20,
-        .gpio_b = 21,
+        .gpio_b = GPIO_DISABLED,
         .period = 20000000,  // 20 ms
     },
 };
 
 static rt_err_t rp2040_drv_pwm_enable(struct rp2040_pwm_slice *pwm_slice,
                                       uint8_t channel, rt_bool_t enable) {
-  if (channel == 0) {
+  if (channel == 0 && pwm_slice->gpio_a != GPIO_DISABLED) {
     gpio_set_function(pwm_slice->gpio_a,
                       enable ? GPIO_FUNC_PWM : GPIO_FUNC_SIO);
-  } else if (channel == 1) {
+  } else if (channel == 1 && pwm_slice->gpio_b != GPIO_DISABLED) {
     gpio_set_function(pwm_slice->gpio_b,
                       enable ? GPIO_FUNC_PWM : GPIO_FUNC_SIO);
   } else {
@@ -110,8 +112,13 @@ static rt_err_t rp2040_drv_pwm_control(struct rt_device_pwm *device, int cmd,
 }
 
 static rt_err_t rp2040_drv_pwm_init(struct rp2040_pwm_slice *pwm_slice) {
-  RT_ASSERT(pwm_slice->id == pwm_gpio_to_slice_num(pwm_slice->gpio_a))
-  RT_ASSERT(pwm_slice->id == pwm_gpio_to_slice_num(pwm_slice->gpio_b))
+  if (pwm_slice->gpio_a != GPIO_DISABLED) {
+    RT_ASSERT(pwm_slice->id == pwm_gpio_to_slice_num(pwm_slice->gpio_a))
+  }
+
+  if (pwm_slice->gpio_b != GPIO_DISABLED) {
+    RT_ASSERT(pwm_slice->id == pwm_gpio_to_slice_num(pwm_slice->gpio_b))
+  }
 
   pwm_set_chan_level(pwm_slice->id, 0, 1);
   pwm_set_chan_level(pwm_slice->id, 1, 1);
