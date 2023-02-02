@@ -54,7 +54,11 @@ static struct rp2040_pwm_slice pwm_slice[4] = {
     {
         .id = 2,
         .gpio_a = 20,
+#if defined(RT_USING_CONSOLE)
         .gpio_b = GPIO_DISABLED,
+#else
+        .gpio_b = 21,
+#endif
         .period = 20000000,  // 20 ms
     },
 };
