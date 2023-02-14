@@ -156,7 +156,7 @@ struct rp2040_spi_ext_hw {
   dma_channel_config rx_dma_config;
   int tx_dma_channel;
   int rx_dma_channel;
-  struct rt_semaphore dma_completed;
+  struct rt_semaphore* dma_completed;
 };
 
 static rt_err_t dma_init(struct rp2040_spi_ext_hw* ext_hw) {
@@ -225,8 +225,8 @@ static rt_uint32_t rp2040_spi_ext_xfer(struct rt_spi_device *device,
   rt_pin_write(ext_hw->int_pin, 1);
 
   // TODO: do that in interrupt
-  //rt_sem_take(&ext_hw->dma_completed, RT_WAITING_FOREVER);
-  dma_channel_wait_for_finish_blocking(ext_hw->tx_dma_channel);
+  rt_sem_take(ext_hw->dma_completed, RT_WAITING_FOREVER);
+  //dma_channel_wait_for_finish_blocking(ext_hw->tx_dma_channel);
   rt_pin_write(ext_hw->int_pin, 0);
   return 1;
 }
@@ -237,13 +237,19 @@ static struct rt_spi_ops rp2040_spi_ext_ops = {.configure = rp2040_spi_configure
 static struct rp2040_spi_ext_hw spi1_hw_dev = {
   {
     .internal_bus_device = spi1,
-    .baudrate = 5000000,
+    .baudrate = 0,
     .miso_pin = 11,
     .mosi_pin = 8,
     .sck_pin = 10,
   },
   .int_pin = 12,
 };
+
+void transaction_completed(void* cookie) {
+  struct rp2040_spi_ext_hw* ext_hw = (struct rp2040_spi_ext_hw*)cookie;
+  struct rp2040_spi_hw* hw = &(ext_hw->hw);
+  rt_sem_release(ext_hw->dma_completed);
+}
 
 rt_err_t rp2040_spi_ext_hw_init(struct rp2040_spi_ext_hw *ext_hw) {
   struct rp2040_spi_hw* hw = &(ext_hw->hw);
@@ -254,6 +260,8 @@ rt_err_t rp2040_spi_ext_hw_init(struct rp2040_spi_ext_hw *ext_hw) {
   rt_pin_mode(ext_hw->int_pin, PIN_MODE_OUTPUT);
   rt_pin_write(ext_hw->int_pin, 0);
   dma_init(ext_hw);
+  rt_pin_attach_irq(9, PIN_IRQ_MODE_RISING, transaction_completed, ext_hw);
+  ext_hw->dma_completed = rt_sem_create(RT_NULL, 0, RT_IPC_FLAG_FIFO);
   return RT_EOK;
 }
 
