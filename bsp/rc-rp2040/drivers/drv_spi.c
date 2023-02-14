@@ -141,8 +141,10 @@ rt_err_t rp2040_spi_hw_init(struct rp2040_spi_hw *hw) {
 }
 
 rt_err_t rp2040_spi_device_init(struct rp2040_spi_device *device) {
-  rt_pin_mode(device->cs_pin, PIN_MODE_OUTPUT);
-  rt_pin_write(device->cs_pin, 1);
+  if (device->cs_pin != -1) {
+    rt_pin_mode(device->cs_pin, PIN_MODE_OUTPUT);
+    rt_pin_write(device->cs_pin, 1);
+  }
   return RT_EOK;
 }
 
@@ -218,15 +220,13 @@ static rt_uint32_t rp2040_spi_ext_xfer(struct rt_spi_device *device,
 
   dma_channel_configure(
       ext_hw->rx_dma_channel, &ext_hw->rx_dma_config, message->recv_buf, &spi_get_hw(hw->internal_bus_device)->dr, message->length, false);
-  dma_start_channel_mask(1 << ext_hw->rx_dma_channel);
-
 
   dma_start_channel_mask((1 << ext_hw->tx_dma_channel) | (1 << ext_hw->rx_dma_channel));
   rt_pin_write(ext_hw->int_pin, 1);
 
   // TODO: do that in interrupt
   //rt_sem_take(&ext_hw->dma_completed, RT_WAITING_FOREVER);
-  dma_channel_wait_for_finish_blocking(ext_hw->rx_dma_channel);
+  dma_channel_wait_for_finish_blocking(ext_hw->tx_dma_channel);
   rt_pin_write(ext_hw->int_pin, 0);
   return 1;
 }
@@ -240,15 +240,17 @@ static struct rp2040_spi_ext_hw spi1_hw_dev = {
     .baudrate = 5000000,
     .miso_pin = 11,
     .mosi_pin = 8,
-    .sck_pin = 3,
+    .sck_pin = 10,
   },
   .int_pin = 12,
 };
 
 rt_err_t rp2040_spi_ext_hw_init(struct rp2040_spi_ext_hw *ext_hw) {
   struct rp2040_spi_hw* hw = &(ext_hw->hw);
+  gpio_set_function(9, GPIO_FUNC_SPI);
   rp2040_spi_hw_init(hw);
   spi_set_slave(hw->internal_bus_device, true);
+  spi_set_format(hw->internal_bus_device, 8, SPI_CPOL_0, SPI_CPHA_1, SPI_MSB_FIRST);
   rt_pin_mode(ext_hw->int_pin, PIN_MODE_OUTPUT);
   rt_pin_write(ext_hw->int_pin, 0);
   dma_init(ext_hw);
