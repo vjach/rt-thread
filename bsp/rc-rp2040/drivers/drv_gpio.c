@@ -17,11 +17,23 @@ typedef struct {
   void *cookie;
 } irq_entry;
 
-static irq_entry pin_irq_entry[25];
+static struct {
+  irq_entry rising_edge;
+  irq_entry falling_edge;
+  /* TODO: level interrupts */
+} pin_irq_entry[25];
 
 void pico_gpio_handler(unsigned gpio, uint32_t events) {
-  if (pin_irq_entry[gpio].handler != NULL) {
-    pin_irq_entry[gpio].handler(pin_irq_entry[gpio].cookie);
+  if (events & GPIO_IRQ_EDGE_FALL) {
+    if (pin_irq_entry[gpio].falling_edge.handler != NULL) {
+      pin_irq_entry[gpio].falling_edge.handler(pin_irq_entry[gpio].falling_edge.cookie);
+    }
+  }
+
+  if (events & GPIO_IRQ_EDGE_RISE) {
+    if (pin_irq_entry[gpio].rising_edge.handler != NULL) {
+      pin_irq_entry[gpio].rising_edge.handler(pin_irq_entry[gpio].rising_edge.cookie);
+    }
   }
 }
 
@@ -64,9 +76,20 @@ static int pico_pin_read(struct rt_device *device, rt_base_t pin)
 
 static rt_err_t pin_attach_irq(struct rt_device *device, rt_int32_t pin, rt_uint32_t mode, void (*hdr)(void *args),
     void *args) {
-  pin_irq_entry[pin].handler = hdr;
-  pin_irq_entry[pin].cookie = args;
-  gpio_set_irq_enabled_with_callback(pin, GPIO_IRQ_EDGE_RISE, true, pico_gpio_handler);
+
+  /* TODO: */
+  uint32_t gpio_int_mode = GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE;
+  if (mode == PIN_IRQ_MODE_FALLING) {
+    pin_irq_entry[pin].falling_edge.handler = hdr;
+    pin_irq_entry[pin].falling_edge.cookie = args;
+    gpio_int_mode |= GPIO_IRQ_EDGE_FALL;
+  } else if (mode == PIN_IRQ_MODE_RISING) {
+    pin_irq_entry[pin].rising_edge.handler = hdr;
+    pin_irq_entry[pin].rising_edge.cookie = args;
+    gpio_int_mode |= GPIO_IRQ_EDGE_RISE;
+  }
+
+  gpio_set_irq_enabled_with_callback(pin, gpio_int_mode, true, pico_gpio_handler);
   return RT_EOK;
 }
 
