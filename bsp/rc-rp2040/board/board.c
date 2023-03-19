@@ -19,13 +19,17 @@
 #define PLL_SYS_KHZ (133 * 1000)
 
 void isr_systick(void) {
-  /* enter interrupt */
-  rt_interrupt_enter();
+    /* enter interrupt */
+#ifndef RT_USING_SMP
+    rt_interrupt_enter();
+#endif
 
-  rt_tick_increase();
+    rt_tick_increase();
 
-  /* leave interrupt */
-  rt_interrupt_leave();
+    /* leave interrupt */
+#ifndef RT_USING_SMP
+    rt_interrupt_leave();
+#endif
 }
 
 uint32_t systick_config(uint32_t ticks) {
@@ -43,7 +47,14 @@ uint32_t systick_config(uint32_t ticks) {
 void rt_hw_board_init() {
   set_sys_clock_khz(PLL_SYS_KHZ, true);
 
-  rt_system_heap_init(HEAP_BEGIN, HEAP_END);
+#ifdef RT_USING_HEAP
+    rt_system_heap_init(HEAP_BEGIN, HEAP_END);
+#endif
+
+#ifdef RT_USING_SMP
+    extern rt_hw_spinlock_t _cpus_lock;
+    rt_hw_spin_lock_init(&_cpus_lock);
+#endif
 
   alarm_pool_init_default();
 

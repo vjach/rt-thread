@@ -62,6 +62,7 @@ set(PICO_INCLUDES
 	libraries/pico-sdk/src/common/pico_binary_info/include
 	libraries/pico-sdk/src/rp2_common/pico_stdio/include
 	libraries/pico-sdk/src/rp2_common/pico_stdio_uart/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/libraries/pico-sdk/src/rp2_common/pico_multicore/include
 	libraries/generated/pico_base
   libraries/pico-sdk/src/rp2_common/boot_stage2/asminclude
   ${CMAKE_CURRENT_SOURCE_DIR}/libraries
@@ -71,7 +72,7 @@ target_include_directories(rtthread_headers INTERFACE
 	../../components/libc/compilers/common/include
 	../../components/libc/compilers/newlib
 	../../libcpu/arm/common
-	../../libcpu/arm/cortex-m0
+	libcpu
 	../../components/drivers/include
 	drivers
 	board
@@ -119,6 +120,7 @@ target_include_directories(rtthread_headers INTERFACE
 	libraries/pico-sdk/src/common/pico_binary_info/include
 	libraries/pico-sdk/src/rp2_common/pico_stdio/include
 	libraries/pico-sdk/src/rp2_common/pico_stdio_uart/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/libraries/pico-sdk/src/rp2_common/pico_multicore/include
 	libraries/generated/pico_base
 	../../components/libc/posix/ipc
 	../../components/libc/posix/io/stdio
@@ -183,8 +185,8 @@ SET(PROJECT_SOURCES
 	../../components/libc/compilers/newlib/syscalls.c
 	../../libcpu/arm/common/div0.c
 	../../libcpu/arm/common/showmem.c
-	../../libcpu/arm/cortex-m0/context_gcc.S
-	../../libcpu/arm/cortex-m0/cpuport.c
+	libcpu/context_gcc.S
+	libcpu/cpuport.c
 	../../components/drivers/ipc/completion.c
 	../../components/drivers/ipc/dataqueue.c
 	../../components/drivers/ipc/pipe.c
@@ -200,6 +202,7 @@ SET(PROJECT_SOURCES
 	../../components/drivers/spi/spi_dev.c
 	../../components/drivers/spi/spi_core.c
   ../../components/drivers/misc/rt_drv_pwm.c
+
 	board/board.c
 	drivers/drv_gpio.c
 	drivers/drv_adc.c
@@ -226,6 +229,7 @@ SET(PROJECT_SOURCES
 	../../src/scheduler.c
 	../../src/thread.c
 	../../src/timer.c
+	../../src/cpu.c
 	libraries/pico-sdk/src/common/pico_util/datetime.c
 	libraries/pico-sdk/src/rp2_common/pico_float/float_math.c
 	libraries/pico-sdk/src/rp2_common/hardware_gpio/gpio.c
@@ -235,6 +239,7 @@ SET(PROJECT_SOURCES
 	libraries/pico-sdk/src/common/pico_time/time.c
 	libraries/pico-sdk/src/rp2_common/pico_bit_ops/bit_ops_aeabi.S
 	libraries/pico-sdk/src/rp2_common/pico_stdlib/stdlib.c
+  libraries/pico-sdk/src/rp2_common/pico_multicore/multicore.c
 	libraries/pico-sdk/src/rp2_common/hardware_vreg/vreg.c
 	libraries/pico-sdk/src/rp2_common/pico_float/float_aeabi.S
 	libraries/pico-sdk/src/common/pico_sync/lock_core.c
