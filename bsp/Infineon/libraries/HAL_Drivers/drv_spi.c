@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2022, RT-Thread Development Team
+ * Copyright (c) 2006-2023, RT-Thread Development Team
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -89,7 +89,7 @@ static rt_err_t spi_configure(struct rt_spi_device *device,
     }
     else
     {
-        return RT_EIO;
+        return -RT_EIO;
     }
 
     uint32_t max_hz;

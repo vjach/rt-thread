@@ -41,6 +41,7 @@
 
 /* Memory Management */
 
+#define RT_PAGE_MAX_ORDER 11
 #define RT_USING_MEMPOOL
 #define RT_USING_SMALL_MEM
 #define RT_USING_MEMHEAP
@@ -124,6 +125,8 @@
 #define RT_USING_NULL
 #define RT_USING_ZERO
 #define RT_USING_RANDOM
+#define RT_USING_FDT
+#define RT_USING_FDTLIB
 #define RT_USING_RTC
 #define RT_USING_DEV_BUS
 #define RT_USING_VIRTIO
@@ -166,6 +169,7 @@
 
 /* Utilities */
 
+#define RT_USING_ADT
 
 /* RT-Thread Utestcases */
 

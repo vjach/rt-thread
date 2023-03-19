@@ -102,7 +102,10 @@ continue:
     isb
 
 #ifdef RT_USING_SMART
-    ldr r5, =PV_OFFSET
+    /* load r5 with PV_OFFSET */
+    ldr r7, =_reset
+    adr r5, _reset
+    sub r5, r5, r7
 
     mov r7, #0x100000
     sub r7, #1
@@ -166,6 +169,9 @@ bss_loop:
     strlo r0,[r1],#4            /* clear 4 bytes                    */
     blo bss_loop                /* loop until done                  */
 
+    mov r0, r5
+    bl rt_kmem_pvoff_set
+
 #ifdef RT_USING_SMP
     mrc p15, 0, r1, c1, c0, 1
     mov r0, #(1<<6)
@@ -173,7 +179,10 @@ bss_loop:
     mcr p15, 0, r1, c1, c0, 1   /* enable smp */
 #endif
 
-    /* initialize the mmu table and enable mmu */
+    /**
+     * void rt_hw_init_mmu_table(struct mem_desc *mdesc, rt_uint32_t size)
+     * initialize the mmu table and enable mmu
+     */
     ldr r0, =platform_mem_desc
     ldr r1, =platform_mem_desc_size
     ldr r1, [r1]
@@ -258,34 +267,27 @@ rt_hw_set_process_id:
     MCR p15, 0, r0, c13, c0, 1
     mov pc, lr
 
+#endif
 .global rt_hw_mmu_switch
 rt_hw_mmu_switch:
-    mov r3, #0
-    mcr p15, 0, r3, c13, c0, 1   /* set contextid = 0, for synchronization*/ 
-    isb
-    
     orr r0, #0x18
-    mcr p15, 0, r0, c2, c0, 0    /* ttbr0 */
+    mcr p15, 0, r0, c2, c0, 0       // ttbr0
 
-    isb
-    mov r1, r1, LSL #0x8         
-    and r2, r2, #0xff             
-    orr r1, r1, r2                /* contextid.PROCID = pid, contextid.ASID = asid*/
-    mcr p15, 0, r1, c13, c0, 1    /* set contextid = r1*/ 
-    isb
-
-    mcr p15, 0, r0, c7, c5, 0    /* iciallu */
-    mcr p15, 0, r0, c7, c5, 6    /* bpiall */
+                                    //invalid tlb
+    mov r0, #0
+    mcr p15, 0, r0, c8, c7, 0
+    mcr p15, 0, r0, c7, c5, 0       //iciallu
+    mcr p15, 0, r0, c7, c5, 6       //bpiall 
 
     dsb
     isb
     mov pc, lr
+
 .global rt_hw_mmu_tbl_get
 rt_hw_mmu_tbl_get:
     mrc p15, 0, r0, c2, c0, 0    /* ttbr0 */
     bic r0, #0x18
     mov pc, lr
-#endif
 
 _halt:
     wfe
@@ -459,7 +461,7 @@ rt_hw_context_switch_interrupt_do:
     bl      rt_thread_self
 #ifdef RT_USING_SMART
     mov     r4, r0
-    bl      lwp_mmu_switch
+    bl      lwp_aspace_switch
     mov     r0, r4
     bl      lwp_user_setting_restore
 #endif
@@ -602,16 +604,19 @@ vector_resv:
     bl      rt_hw_trap_resv
     b       .
 
-#ifdef RT_USING_SMP
 .global rt_hw_clz
 rt_hw_clz:
     clz r0, r0
     bx lr
 
+#ifdef RT_USING_SMP
+
 .global rt_secondary_cpu_entry
 rt_secondary_cpu_entry:
 #ifdef RT_USING_SMART
-    ldr     r5, =PV_OFFSET
+    ldr     r0, =_reset
+    adr     r5, _reset
+    sub     r5, r5, r0
 
     ldr     lr, =after_enable_mmu_n
     ldr     r0, =init_mtbl

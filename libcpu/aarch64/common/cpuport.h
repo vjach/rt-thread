@@ -11,6 +11,7 @@
 #define  CPUPORT_H__
 
 #include <armv8.h>
+#include <rtdef.h>
 
 #ifdef RT_USING_SMP
 typedef union {
@@ -24,17 +25,27 @@ typedef union {
 
 rt_inline void rt_hw_isb(void)
 {
-    asm volatile ("isb":::"memory");
+    __asm__ volatile ("isb":::"memory");
 }
 
 rt_inline void rt_hw_dmb(void)
 {
-    asm volatile ("dmb sy":::"memory");
+    __asm__ volatile ("dmb ish":::"memory");
+}
+
+rt_inline void rt_hw_wmb(void)
+{
+    __asm__ volatile ("dmb ishst":::"memory");
+}
+
+rt_inline void rt_hw_rmb(void)
+{
+    __asm__ volatile ("dmb ishld":::"memory");
 }
 
 rt_inline void rt_hw_dsb(void)
 {
-    asm volatile ("dsb sy":::"memory");
+    __asm__ volatile ("dsb ish":::"memory");
 }
 
 #endif  /*CPUPORT_H__*/

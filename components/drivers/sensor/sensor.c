@@ -228,8 +228,8 @@ __exit:
 static rt_err_t _sensor_close(rt_device_t dev)
 {
     rt_sensor_t sensor = (rt_sensor_t)dev;
-    int i;
     rt_err_t (*local_ctrl)(rt_sensor_t sensor, int cmd, void *arg) = _local_control;
+    int i;
 
     RT_ASSERT(dev != RT_NULL);
 
@@ -284,7 +284,7 @@ __exit:
     return RT_EOK;
 }
 
-static rt_size_t _sensor_read(rt_device_t dev, rt_off_t pos, void *buf, rt_size_t len)
+static rt_ssize_t _sensor_read(rt_device_t dev, rt_off_t pos, void *buf, rt_size_t len)
 {
     rt_sensor_t sensor = (rt_sensor_t)dev;
     rt_size_t result = 0;
@@ -516,11 +516,6 @@ int rt_hw_sensor_register(rt_sensor_t    sensor,
 
     LOG_I("sensor[%s] init success", device_name);
     rt_free(device_name);
-
-    /* set sensor accuracy and power as the hightest, and polling data as default */
-    rt_device_control(device, RT_SENSOR_CTRL_SET_ACCURACY_MODE, RT_SENSOR_MODE_ACCURACY_HIGHEST);
-    rt_device_control(device, RT_SENSOR_CTRL_SET_POWER_MODE, RT_SENSOR_MODE_POWER_HIGHEST);
-    rt_device_control(device, RT_SENSOR_CTRL_SET_FETCH_MODE, RT_SENSOR_MODE_FETCH_POLLING);
 
     return RT_EOK;
 }
