@@ -132,8 +132,9 @@ static rt_size_t sbus_read(rt_device_t dev, rt_off_t pos, void* buffer,
     return 0;
   }
 
+
   rt_size_t to_copy = size;
-  if (to_copy < SBUS_BUFFER_SIZE) {
+  if (to_copy > SBUS_BUFFER_SIZE) {
     to_copy = SBUS_BUFFER_SIZE;
   }
 
