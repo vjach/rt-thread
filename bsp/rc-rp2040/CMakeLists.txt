@@ -223,7 +223,7 @@ SET(PROJECT_SOURCES
 	../../src/mem.c
 	../../src/mempool.c
 	../../src/object.c
-	../../src/scheduler.c
+	../../src/scheduler_up.c
 	../../src/thread.c
 	../../src/timer.c
 	libraries/pico-sdk/src/common/pico_util/datetime.c
