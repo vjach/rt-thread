@@ -1,0 +1,37 @@
+From 89fa37cf0e5fe9e880d304acbbc5c7ab109d8ddb Mon Sep 17 00:00:00 2001
+From: Victor-Stefan Jach <14238510+vjach@users.noreply.github.com>
+Date: Sat, 8 Apr 2023 00:19:40 +0200
+Subject: [PATCH] remove too early constructor calls
+
+Signed-off-by: Victor-Stefan Jach <14238510+vjach@users.noreply.github.com>
+---
+ src/rp2_common/pico_runtime/runtime.c | 13 -------------
+ 1 file changed, 13 deletions(-)
+
+diff --git a/src/rp2_common/pico_runtime/runtime.c b/src/rp2_common/pico_runtime/runtime.c
+index 2300d3e..bb86c18 100644
+--- a/src/rp2_common/pico_runtime/runtime.c
++++ b/src/rp2_common/pico_runtime/runtime.c
+@@ -160,19 +160,6 @@ void runtime_init(void) {
+     spin_locks_reset();
+     irq_init_priorities();
+     alarm_pool_init_default();
+-
+-    // Start and end points of the constructor list,
+-    // defined by the linker script.
+-    extern void (*__init_array_start)(void);
+-    extern void (*__init_array_end)(void);
+-
+-    // Call each function in the list.
+-    // We have to take the address of the symbols, as __init_array_start *is*
+-    // the first function pointer, not the address of it.
+-    for (void (**p)(void) = &__init_array_start; p < &__init_array_end; ++p) {
+-        (*p)();
+-    }
+-
+ }
+ 
+ void __attribute__((weak, noreturn)) _exit(__unused int status) {
+-- 
+2.25.1
+
