@@ -17,6 +17,7 @@ FetchContent_Declare(
     PATCH_COMMAND git am
     ${CMAKE_CURRENT_SOURCE_DIR}/patches/0001-Weaken-panic-and-_exit-functions.patch
     ${CMAKE_CURRENT_SOURCE_DIR}/patches/0002-Set-XOSC-to-8-MHz.patch
+    ${CMAKE_CURRENT_SOURCE_DIR}/patches/0003-remove-too-early-constructor-calls.patch
     )
 if(NOT pico_sdk__POPULATED)
     FetchContent_Populate(pico_sdk)
