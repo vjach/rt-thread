@@ -73,6 +73,7 @@ target_include_directories(rtthread_headers INTERFACE
 	../../libcpu/arm/common
 	../../libcpu/arm/cortex-m0
 	../../components/drivers/include
+ libcpu
 	drivers
 	board
 	board/ports/lcd
@@ -119,6 +120,7 @@ target_include_directories(rtthread_headers INTERFACE
 	libraries/pico-sdk/src/common/pico_binary_info/include
 	libraries/pico-sdk/src/rp2_common/pico_stdio/include
 	libraries/pico-sdk/src/rp2_common/pico_stdio_uart/include
+	libraries/pico-sdk/src/rp2_common/pico_multicore/include
 	libraries/generated/pico_base
 	../../components/libc/posix/ipc
 	../../components/libc/posix/io/stdio
@@ -183,8 +185,8 @@ SET(PROJECT_SOURCES
 	../../components/libc/compilers/newlib/syscalls.c
 	../../libcpu/arm/common/div0.c
 	../../libcpu/arm/common/showmem.c
-	../../libcpu/arm/cortex-m0/context_gcc.S
-	../../libcpu/arm/cortex-m0/cpuport.c
+  #	../../libcpu/arm/cortex-m0/context_gcc.S
+  #../../libcpu/arm/cortex-m0/cpuport.c
 	../../components/drivers/ipc/completion.c
 	../../components/drivers/ipc/dataqueue.c
 	../../components/drivers/ipc/pipe.c
@@ -223,9 +225,14 @@ SET(PROJECT_SOURCES
 	../../src/mem.c
 	../../src/mempool.c
 	../../src/object.c
-	../../src/scheduler_up.c
+	../../src/scheduler_mp.c
 	../../src/thread.c
 	../../src/timer.c
+	../../src/cpu.c
+  # SMP support
+  libcpu/cpuport.c
+  libcpu/context_gcc.S
+  # pico-sdk
 	libraries/pico-sdk/src/common/pico_util/datetime.c
 	libraries/pico-sdk/src/rp2_common/pico_float/float_math.c
 	libraries/pico-sdk/src/rp2_common/hardware_gpio/gpio.c
@@ -274,6 +281,7 @@ SET(PROJECT_SOURCES
 	libraries/pico-sdk/src/rp2_common/hardware_irq/irq.c
 	libraries/pico-sdk/src/rp2_common/pico_printf/printf.c
 	libraries/pico-sdk/src/rp2_common/hardware_uart/uart.c
+	libraries/pico-sdk/src/rp2_common/pico_multicore/multicore.c
   libraries/startup.S
   ${CMAKE_CURRENT_BINARY_DIR}/boot2.S
 )
@@ -285,6 +293,7 @@ LINK_LIBRARIES(
 	c
 	m
 )
+
 add_executable(rtthread ${PROJECT_SOURCES})
 
 pico_generate_pio_header(rtthread ${CMAKE_CURRENT_LIST_DIR}/drivers/uart_tx.pio)

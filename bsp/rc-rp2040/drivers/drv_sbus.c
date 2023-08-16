@@ -56,7 +56,10 @@ static uint8_t* sbus_get_free_buffer(struct sbus_dev* dev) {
 }
 
 void sbus_isr(void) {
+#ifndef RT_USING_SMP
   rt_interrupt_enter();
+#endif
+
   uint32_t mis = uart_get_hw(uart0)->mis;
   if (sbus0_dev.idle == 0) {
       while (uart_is_readable(uart0)) {
@@ -99,7 +102,9 @@ void sbus_isr(void) {
     }
   }
 
+#ifndef RT_USING_SMP
   rt_interrupt_leave();
+#endif
 }
 
 rt_err_t sbus_init(rt_device_t dev) {

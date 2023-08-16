@@ -197,5 +197,9 @@
 
 /* Onboard Peripheral Drivers */
 
+/* Multicore */
+#define RT_USING_SMP
+#define RT_CPUS_NR 2
+
 
 #endif
