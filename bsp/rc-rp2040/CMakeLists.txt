@@ -213,9 +213,9 @@ SET(PROJECT_SOURCES
 	../../components/finsh/msh.c
 	../../components/finsh/shell.c
 	../../components/finsh/msh_parse.c
+	../../components/drivers/core/device.c
 	../../src/clock.c
 	../../src/components.c
-	../../src/device.c
 	../../src/idle.c
 	../../src/ipc.c
 	../../src/irq.c

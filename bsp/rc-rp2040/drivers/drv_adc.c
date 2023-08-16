@@ -9,7 +9,6 @@
  */
 
 #include <board.h>
-#include <rtdebug.h>
 #include <rthw.h>
 #include <rtthread.h>
 #include <rtdevice.h>
