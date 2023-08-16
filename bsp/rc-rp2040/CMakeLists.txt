@@ -70,6 +70,8 @@ set(PICO_INCLUDES
 target_include_directories(rtthread_headers INTERFACE
 	../../components/libc/compilers/common/include
 	../../components/libc/compilers/newlib
+	../../components/libc/compilers/common/include
+	../../components/ktime/inc
 	../../libcpu/arm/common
 	../../libcpu/arm/cortex-m0
 	../../components/drivers/include

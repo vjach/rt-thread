@@ -13,6 +13,7 @@
 #include <rthw.h>
 #include <rtthread.h>
 #include <stdio.h>
+#include <sys/time.h>
 
 #include "hardware/structs/systick.h"
 
@@ -89,4 +90,33 @@ void rt_hw_board_init() {
 void panic(__unused const char *fmt, ...) {
   while (true)
     ;
+}
+
+clock_t clock(void) {
+  uint64_t time = time_us_64();
+  return time;
+}
+
+rt_err_t rt_ktime_boottime_get_us(struct timeval *tv)
+{
+    RT_ASSERT(tv != RT_NULL);
+
+    uint64_t us = time_us_64();
+
+    tv->tv_sec  = us / (1000UL * 1000);
+    tv->tv_usec = us % (1000UL * 1000);
+
+    return RT_EOK;
+}
+
+rt_err_t rt_ktime_boottime_get_ns(struct timespec *ts)
+{
+    RT_ASSERT(ts != RT_NULL);
+
+    uint64_t us = time_us_64();
+
+    ts->tv_sec  = (uint32_t)(us / (1000UL * 1000));
+    ts->tv_nsec = (uint32_t)((us % (1000UL * 1000)) * 1000);
+
+    return RT_EOK;
 }

@@ -89,6 +89,8 @@
 /* C/C++ and POSIX layer */
 
 #define RT_LIBC_DEFAULT_TIMEZONE 8
+#define RT_USING_POSIX_CLOCK
+#define RT_USING_KTIME
 
 /* POSIX (Portable Operating System Interface) layer */
 
