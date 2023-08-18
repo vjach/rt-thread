@@ -20,19 +20,29 @@
 #define UART_ID uart0
 #define BAUD_RATE 100000
 #define DATA_BITS 8
-#define STOP_BITS 1
+#define STOP_BITS 2
 #define PARITY UART_PARITY_NONE
 
 #define UART_RX_PIN 29
 
 #define SBUS_BUFFER_SIZE  25
 
+
+#define SBUS_INT_IDLE (1 << 6)
+#define SBUS_INT_RX (1 << 4)
+
+
+enum  {
+  SBUS_STATE_SYNC = 0,
+  SBUS_STATE_IN_PROGRESS = 1,
+};
+
 struct sbus_dev {
   struct rt_device parent;
   rt_uint32_t uart_periph;
   rt_uint32_t irqno;
   volatile uint8_t offset;
-  volatile uint8_t idle;
+  volatile uint8_t state;
   struct rt_semaphore data_available;
 
   uint8_t first_buffer[SBUS_BUFFER_SIZE];
@@ -56,72 +66,69 @@ static uint8_t* sbus_get_free_buffer(struct sbus_dev* dev) {
 }
 
 void sbus_isr(void) {
-#ifndef RT_USING_SMP
-  rt_interrupt_enter();
-#endif
 
   uint32_t mis = uart_get_hw(uart0)->mis;
-  if (sbus0_dev.idle == 0) {
+  switch (sbus0_dev.state) {
+    case SBUS_STATE_SYNC:
+      /* NOTE: this is self-limited to FIFO size */
       while (uart_is_readable(uart0)) {
         uart_getc(uart0);
       }
 
-    if (mis & (1 << 6)) {
-      sbus0_dev.idle = 1;
+      sbus0_dev.state = SBUS_STATE_IN_PROGRESS;
       sbus0_dev.offset = 0;
-      sbus0_dev.incomplete_buffer = sbus_get_free_buffer(&sbus0_dev);
-    }
-  } else {
-    while (uart_is_readable(uart0) &&
-        sbus0_dev.offset < SBUS_BUFFER_SIZE) {
-      sbus0_dev.incomplete_buffer[(sbus0_dev.offset)++] = uart_getc(uart0);
-    }
+      uart_get_hw(uart0)->imsc |= SBUS_INT_RX;
+      break;
 
-    // check if there is more that than expected
-    if (uart_is_readable(uart0) &&
-        sbus0_dev.offset == SBUS_BUFFER_SIZE) {
-      // not in sync with the module; thow data away and get ready for next chance
-      while (uart_is_readable(uart0)) {
-        uart_getc(uart0);
+    case SBUS_STATE_IN_PROGRESS: 
+      if (mis & (SBUS_INT_IDLE | SBUS_INT_RX)) {
+        while (uart_is_readable(uart0) && sbus0_dev.offset < SBUS_BUFFER_SIZE) {
+          sbus0_dev.incomplete_buffer[(sbus0_dev.offset)++] = uart_getc(uart0);
+        }
+
+        bool still_readable = uart_is_readable(uart0);
+
+        if (still_readable && sbus0_dev.offset == SBUS_BUFFER_SIZE) {
+          uint32_t cnt = 0;
+          /* error, restart */
+          sbus0_dev.state = SBUS_STATE_SYNC;
+          sbus0_dev.offset = 0;
+          uart_get_hw(uart0)->imsc &= ~SBUS_INT_RX;
+        } else if (!still_readable && sbus0_dev.offset == SBUS_BUFFER_SIZE) {
+          /* frame completed */
+          sbus0_dev.complete_buffer = sbus0_dev.incomplete_buffer;
+          sbus0_dev.incomplete_buffer = sbus_get_free_buffer(&sbus0_dev);
+          sbus0_dev.offset = 0;
+          /* NOTE:
+           * Documentation asks for rt_interrupt_enter() and
+           * rt_interrupt_leave() to wrap kernel specific calls in ISR. That
+           * will prohibit context switching of a process via interrupt
+           * nesting. However, by doing that, the threads are not woken up, or
+           * woken up too late. A possible workaround is increasing the amount
+           * of ticks per second. Or simply let context switch happen.
+           * */
+          rt_sem_release(&sbus0_dev.data_available);
+        } else if (!still_readable && sbus0_dev.offset < SBUS_BUFFER_SIZE) {
+           //keep going
+        }
       }
-
-      sbus0_dev.offset = 0;
-      sbus0_dev.idle = 0;
-    }
-
-    else if (sbus0_dev.offset == SBUS_BUFFER_SIZE) {
-      // TODO: swap buffers
-      sbus0_dev.complete_buffer = sbus0_dev.incomplete_buffer;
-      sbus0_dev.incomplete_buffer = sbus_get_free_buffer(&sbus0_dev);
-      sbus0_dev.idle = 0;
-      rt_sem_release(&sbus0_dev.data_available);
-    }
-
-    if (mis & (1 << 6)) {
-      sbus0_dev.idle = 1;
-    }
+      break;
   }
-
-#ifndef RT_USING_SMP
-  rt_interrupt_leave();
-#endif
 }
 
 rt_err_t sbus_init(rt_device_t dev) {
   struct sbus_dev* sbus = (struct sbus_dev*)dev->user_data;
   sbus->offset = 0;
-  sbus->idle = 0;
+  sbus->state = SBUS_STATE_SYNC;
   sbus->complete_buffer = RT_NULL;
   sbus->incomplete_buffer = sbus_get_free_buffer(sbus);
   rt_sem_init(&sbus->data_available, "sbus_sem", 0,  RT_IPC_FLAG_FIFO);
 
   // enable uart idle interrupt
-  uart_get_hw(uart0)->imsc |= 1 << 6;
+  uart_get_hw(uart0)->imsc |= SBUS_INT_IDLE;
   irq_set_exclusive_handler(UART0_IRQ, sbus_isr);
   irq_set_enabled(UART0_IRQ, true);
 
-  // Now enable the UART to send interrupts - RX only
-  uart_set_irq_enables(uart0, true, false);
   return RT_EOK;
 }
 
@@ -168,21 +175,10 @@ const static struct rt_device_ops sbus_ops = {
 int rt_hw_sbus_init(void) {
   uart_init(UART_ID, BAUD_RATE);
 
-  // Set the TX and RX pins by using the function select on the GPIO
-  // Set datasheet for more information on function select
   gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
-
-  // Actually, we want a different speed
-  // The call will return the actual baud rate selected, which will be as close
-  // as possible to that requested
   uart_set_baudrate(UART_ID, BAUD_RATE);
-
-  // Set UART flow control CTS/RTS, we don't want these, so turn them off
   uart_set_hw_flow(UART_ID, false, false);
-
-  // Set our data format
   uart_set_format(UART_ID, DATA_BITS, STOP_BITS, PARITY);
-
   uart_set_fifo_enabled(UART_ID, true);
 
   sbus0_dev.parent.ops = &sbus_ops;
