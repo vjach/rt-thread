@@ -40,9 +40,7 @@ struct pico_uart_dev
 
 void pico_uart_isr(void)
 {
-#ifndef RT_USING_SMP
     rt_interrupt_enter();
-#endif
 
     /* read interrupt status and clear it */
     if (uart_is_readable(uart0)) /* rx ind */
@@ -50,9 +48,7 @@ void pico_uart_isr(void)
         rt_hw_serial_isr(&uart0_dev.parent, RT_SERIAL_EVENT_RX_IND);
     }
 
-#ifndef RT_USING_SMP
     rt_interrupt_leave();
-#endif
 }
 
 /*

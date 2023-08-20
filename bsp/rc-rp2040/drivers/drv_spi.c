@@ -232,9 +232,11 @@ static struct rp2040_spi_ext_hw spi1_hw_dev = {
 };
 
 void transaction_completed(void *cookie) {
+  rt_interrupt_enter();
   struct rp2040_spi_ext_hw *ext_hw = (struct rp2040_spi_ext_hw *)cookie;
   struct rp2040_spi_hw *hw = &(ext_hw->hw);
   rt_sem_release(ext_hw->dma_completed);
+  rt_interrupt_leave();
 }
 
 void transaction_started(void *cookie) {

@@ -66,6 +66,7 @@ static uint8_t* sbus_get_free_buffer(struct sbus_dev* dev) {
 }
 
 void sbus_isr(void) {
+  rt_interrupt_enter();
   uint32_t mis = uart_get_hw(uart0)->mis;
   switch (sbus0_dev.state) {
     case SBUS_STATE_SYNC:
@@ -113,6 +114,8 @@ void sbus_isr(void) {
       }
       break;
   }
+
+  rt_interrupt_leave();
 }
 
 rt_err_t sbus_init(rt_device_t dev) {
