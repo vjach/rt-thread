@@ -12,12 +12,14 @@
 
 #include <rthw.h>
 #include <rtthread.h>
-#include <stdio.h>
 #include <sys/time.h>
 
 #include "hardware/structs/systick.h"
+#include "pico/stdlib.h"
 
 #define PLL_SYS_KHZ (133 * 1000)
+
+static struct rt_mutex printf_mutex;
 
 void isr_systick(void) {
   /* enter interrupt */
@@ -76,7 +78,7 @@ void rt_hw_board_init() {
       frequency_count_khz(CLOCKS_FC0_SRC_VALUE_PLL_SYS_CLKSRC_PRIMARY) * 1000 /
       RT_TICK_PER_SECOND);
 
-  stdio_init_all();
+  rt_mutex_init(&printf_mutex, "printf_mutex", RT_IPC_FLAG_FIFO);
   rt_hw_uart_init();
   rt_hw_sbus_init();
   rt_hw_uart1_init();
@@ -119,4 +121,23 @@ rt_err_t rt_ktime_boottime_get_ns(struct timespec *ts)
     ts->tv_nsec = (uint32_t)((us % (1000UL * 1000)) * 1000);
 
     return RT_EOK;
+}
+
+rt_size_t __wrap_printf(const char *fmt, ...) {
+  rt_size_t ret = 0;
+  va_list args;
+  va_start(args, fmt);
+  ret = rt_kprintf(fmt, args);
+  va_end(args);
+  return ret;
+#if 0
+#define PRINTF_FT_BUFFER_SIZE (256U)
+  static uint8_t buffer[PRINTF_FT_BUFFER_SIZE];
+  rt_mutex_take(&printf_mutex, RT_WAITING_FOREVER);
+  va_list args;
+  va_start(args, fmt);
+  rt_vsnprintf(buffer, PRINTF_FT_BUFFER_SIZE, fmt, args);
+  va_end(args);
+  rt_mutex_release(&printf_mutex);
+#endif
 }

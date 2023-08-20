@@ -13,6 +13,7 @@
 
 #include <rthw.h>
 #include <rtthread.h>
+#include <hardware/gpio.h>
 
 int rt_hw_uart_init(void);
 int rt_hw_uart1_init(void);

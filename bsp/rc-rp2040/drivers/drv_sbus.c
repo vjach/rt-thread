@@ -152,7 +152,6 @@ static rt_size_t sbus_read(rt_device_t dev, rt_off_t pos, void* buffer,
     to_copy = SBUS_BUFFER_SIZE;
   }
 
-  irq_set_enabled(UART0_IRQ, false);
   if (sbus->complete_buffer != RT_NULL) {
     memcpy(buffer, sbus->complete_buffer, to_copy);
     sbus->complete_buffer = RT_NULL;
@@ -160,8 +159,6 @@ static rt_size_t sbus_read(rt_device_t dev, rt_off_t pos, void* buffer,
     to_copy = 0;
   }
 
-  irq_set_enabled(UART0_IRQ, true);
-  uart_get_hw(uart0)->imsc |= 1 << 6;
   return to_copy;
 }
 

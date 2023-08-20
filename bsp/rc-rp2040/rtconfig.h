@@ -54,7 +54,7 @@
 
 #define RT_USING_COMPONENTS_INIT
 #define RT_USING_USER_MAIN
-#define RT_MAIN_THREAD_STACK_SIZE 4096
+#define RT_MAIN_THREAD_STACK_SIZE 8192
 #define RT_MAIN_THREAD_PRIORITY 10
 #define RT_USING_OVERFLOW_CHECK
 //#define RT_USING_MSH
@@ -92,6 +92,7 @@
 #define RT_LIBC_DEFAULT_TIMEZONE 8
 #define RT_USING_POSIX_CLOCK
 #define RT_USING_KTIME
+// #define RT_USING_TIMER_SOFT
 
 /* POSIX (Portable Operating System Interface) layer */
 

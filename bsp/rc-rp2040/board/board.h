@@ -11,7 +11,6 @@
 #ifndef __BOARD_H__
 #define __BOARD_H__
 
-#include "pico/stdlib.h"
 #include "hardware/pll.h"
 #include "hardware/clocks.h"
 #include "hardware/structs/pll.h"
