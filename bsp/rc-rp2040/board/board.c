@@ -86,10 +86,12 @@ void rt_hw_board_init() {
 #endif
 }
 
+#if 0
 void panic(__unused const char *fmt, ...) {
   while (true)
     ;
 }
+#endif
 
 clock_t clock(void) {
   uint64_t time = time_us_64();

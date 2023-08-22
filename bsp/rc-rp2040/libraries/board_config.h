@@ -14,8 +14,6 @@
 #ifndef _BOARDS_PICO_H
 #define _BOARDS_PICO_H
 
-//#define XOSC_MHZ 8
-
 #ifndef PICO_DEFAULT_UART
 #define PICO_DEFAULT_UART 0
 #endif
