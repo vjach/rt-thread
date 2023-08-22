@@ -362,6 +362,16 @@ void rt_schedule(void)
 
                 RT_OBJECT_HOOK_CALL(rt_scheduler_switch_hook, (current_thread));
 
+#if 0
+                if (strcmp(to_thread->parent.name, "main") == 0) {
+                  rt_kprintf("[%d]switch to priority#%d "
+                           "thread:%.*s(sp:0x%08x), "
+                           "from thread:%.*s(sp: 0x%08x)\n",
+                           pcpu->irq_nest, highest_ready_priority,
+                           RT_NAME_MAX, to_thread->parent.name, to_thread->sp, 
+                           RT_NAME_MAX, current_thread->parent.name, current_thread->sp);
+                }
+#endif
                 rt_hw_context_switch((rt_ubase_t)&current_thread->sp,
                         (rt_ubase_t)&to_thread->sp, to_thread);
             }

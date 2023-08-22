@@ -24,6 +24,7 @@
     .equ    NVIC_SHPR3, 0xE000ED20          /* system priority register (3) */
     .equ    NVIC_PENDSV_PRI, 0xFFFF0000     /* PendSV and SysTick priority value (lowest) */
     .equ    NVIC_PENDSVSET, 0x10000000      /* value to trigger PendSV exception */
+    .equ    MAGIC_TCB,0xD00DBAAF
 
 #include "../rtconfig.h"
 
@@ -139,9 +140,13 @@ cpu0_info:
 
     MRS     R1, PSP                 /* get from thread stack pointer */
 
-    SUBS    R1, R1, #0x20           /* space for {R4 - R7} and {R8 - R11} */
+    SUBS    R1, R1, #0x24           /* space for {R4 - R7} and {R8 - R11} */
     LDR     R0, [R0]
     STR     R1, [R0]                /* update from thread stack pointer */
+
+    LDR     R0,=MAGIC_TCB
+    STR     R0, [R1] 
+    ADDS    R1,#4
 
     STMIA   R1!, {R4 - R7}          /* push thread {R4 - R7} register to thread stack */
 
@@ -149,7 +154,9 @@ cpu0_info:
     MOV     R5, R9
     MOV     R6, R10
     MOV     R7, R11
+
     STMIA   R1!, {R4 - R7}          /* push thread {R8 - R11} high register to thread stack */
+    
 switch_to_thread:
 
 #ifndef RT_USING_SMP
@@ -161,6 +168,20 @@ switch_to_thread:
     LDR     R1, [R1]
 
     LDR     R1, [R1]                /* load thread stack pointer */
+
+/* TCB guard */
+    MOV     R8, R2
+    MOV     R9, R0
+    LDR     R0, =MAGIC_TCB
+    LDR     R2, [R1]
+    CMP     R2, R0
+    BEQ     all_good
+    BL      panic
+  all_good:
+    MOV     R2, R8
+    MOV     R0, R9
+    ADDS    R1,#4
+    /* end of guard */
 
     LDMIA   R1!, {R4 - R7}          /* pop thread {R4 - R7} register from thread stack */
     PUSH    {R4 - R7}               /* push {R4 - R7} to MSP for copy {R8 - R11} */
@@ -263,3 +284,5 @@ HardFault_Handler:
 rt_hw_interrupt_check:
     MRS     R0, IPSR
     BX      LR
+
+  

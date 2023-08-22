@@ -69,16 +69,13 @@ void rt_hw_board_init() {
   // Call each function in the list.
   // We have to take the address of the symbols, as __init_array_start *is*
   // the first function pointer, not the address of it.
-  for (void (**p)() = &__init_array_start; p < &__init_array_end; ++p) {
+  for (void (**p)() = &__init_array_start; p < (&__init_array_end - 1); ++p) {
     (*p)();
   }
 
   /* Configure the SysTick */
-  systick_config(
-      frequency_count_khz(CLOCKS_FC0_SRC_VALUE_PLL_SYS_CLKSRC_PRIMARY) * 1000 /
-      RT_TICK_PER_SECOND);
+  systick_config(clock_get_hz(clk_sys) / RT_TICK_PER_SECOND);
 
-  rt_mutex_init(&printf_mutex, "printf_mutex", RT_IPC_FLAG_FIFO);
   rt_hw_uart_init();
   rt_hw_sbus_init();
   rt_hw_uart1_init();
@@ -130,14 +127,4 @@ rt_size_t __wrap_printf(const char *fmt, ...) {
   ret = rt_kprintf(fmt, args);
   va_end(args);
   return ret;
-#if 0
-#define PRINTF_FT_BUFFER_SIZE (256U)
-  static uint8_t buffer[PRINTF_FT_BUFFER_SIZE];
-  rt_mutex_take(&printf_mutex, RT_WAITING_FOREVER);
-  va_list args;
-  va_start(args, fmt);
-  rt_vsnprintf(buffer, PRINTF_FT_BUFFER_SIZE, fmt, args);
-  va_end(args);
-  rt_mutex_release(&printf_mutex);
-#endif
 }

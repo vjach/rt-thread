@@ -108,6 +108,7 @@ static rt_size_t i2c_master_xfer(struct rt_i2c_bus_device *bus,
                                     struct rt_i2c_msg msgs[],
                                     rt_uint32_t num)
 {
+#if 0
   rt_size_t ret = 0;
   struct rp2040_i2c_device_info* dev_info = bus->priv;
   i2c_inst_t* dev = dev_info->dev;
@@ -152,6 +153,13 @@ finish:
   dma_deinit(dev_info);
   i2c_get_hw(dev)->enable = 0;
   return ret;
+#endif
+  for (int i = 0; i < num; ++i) {
+    struct rt_i2c_msg* current_msg = &msgs[i];
+    i2c_write_blocking(i2c0, current_msg->addr, current_msg->buf, current_msg->len, false);
+  }
+
+  return num;
 }
 
 static rt_size_t i2c_slave_xfer(struct rt_i2c_bus_device *bus,
@@ -169,6 +177,7 @@ static rt_err_t i2c_bus_control(struct rt_i2c_bus_device *bus,
 }
 
 static inline void i2c_irq_handler(struct rp2040_i2c_device_info* config) {
+  rt_interrupt_enter();
   const uint32_t status = i2c_get_hw(config->dev)->intr_stat;
 
   if (status & I2C_IC_INTR_STAT_R_TX_ABRT_BITS) {
@@ -180,6 +189,7 @@ static inline void i2c_irq_handler(struct rp2040_i2c_device_info* config) {
     i2c_get_hw(config->dev)->clr_stop_det;
     rt_sem_release(&config->dma_completed);
   }
+  rt_interrupt_leave();
 }
 
 static const struct rt_i2c_bus_device_ops rp2040_i2c_ops =

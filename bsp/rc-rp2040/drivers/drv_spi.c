@@ -49,12 +49,22 @@ static struct rp2040_spi_hw spi0_hw_dev = {
 };
 
 #if defined(BSP_USING_SPI0_DEVICE0)
-static struct rp2040_spi_device spi0_device0 = {
-    .device_name = "can",
-    .cs_pin = 1,
-};
+static struct rt_spi_device spi0_device0;
 #endif
 
+#if defined(BSP_USING_SPI0_DEVICE1)
+static struct rt_spi_device spi0_device1;
+#endif
+
+#if defined(BSP_USING_SPI0_DEVICE2)
+static struct rt_spi_device spi0_device2;
+#endif
+
+#if defined(BSP_USING_SPI0_DEVICE3)
+static struct rt_spi_device spi0_device3;
+#endif
+
+#if 0
 #if defined(BSP_USING_SPI0_DEVICE1)
 static struct rp2040_spi_device spi0_device1 = {
     .device_name = "barometer",
@@ -75,6 +85,7 @@ static struct rp2040_spi_device spi0_device3 = {
     .cs_pin = 28,
 };
 #endif
+#endif
 
 #endif
 
@@ -91,13 +102,15 @@ static rt_uint32_t rp2040_spi_xfer(struct rt_spi_device *device, struct rt_spi_m
   RT_ASSERT(device->parent.user_data != RT_NULL);
   RT_ASSERT(message != RT_NULL);
   RT_ASSERT(message->send_buf != RT_NULL || message->recv_buf != RT_NULL);
-  struct rp2040_spi_hw *hw = (struct rp2040_spi_hw *)device->bus->parent.user_data;
-  struct rp2040_spi_device *internal_device = (struct rp2040_spi_device *)device->parent.user_data;
+  struct rt_spi_bus* bus = (struct rt_spi_bus*)device->bus;
+  struct rp2040_spi_hw *hw = rt_container_of(bus, struct rp2040_spi_hw, bus_device);
 
   if (message->cs_take) {
-    rt_pin_write(internal_device->cs_pin, 0);
+    rt_pin_write(device->cs_pin, 0);
   }
 
+#if 1
+  rt_kprintf("spi msg: %u\n", message->length);
   if (message->send_buf != RT_NULL && message->recv_buf != RT_NULL) {
     spi_write_read_blocking(hw->internal_bus_device, message->send_buf, message->recv_buf, message->length);
   } else if (message->send_buf != RT_NULL) {
@@ -105,12 +118,13 @@ static rt_uint32_t rp2040_spi_xfer(struct rt_spi_device *device, struct rt_spi_m
   } else {
     spi_read_blocking(hw->internal_bus_device, 0x00, message->recv_buf, message->length);
   }
+#endif
 
   if (message->cs_release) {
-    rt_pin_write(internal_device->cs_pin, 1);
+    rt_pin_write(device->cs_pin, 1);
   }
 
-  return 1;
+  return message->length;
 }
 
 static struct rt_spi_ops rp2040_spi_ops = {.configure = rp2040_spi_configure, .xfer = rp2040_spi_xfer};
@@ -271,30 +285,33 @@ int rt_hw_spi_init(void) {
 #if defined(BSP_USING_SPI0_BUS)
   rp2040_spi_hw_init(&spi0_hw_dev);
   rt_spi_bus_register(&spi0_hw_dev.bus_device, SPI0_BUS_NAME, &rp2040_spi_ops);
-  spi0_hw_dev.bus_device.parent.user_data = &spi0_hw_dev;
 
 #if defined(BSP_USING_SPI0_DEVICE0)
-  rp2040_spi_bus_attach_device(SPI0_BUS_NAME, &spi0_device0);
+  rt_spi_bus_attach_device_cspin(&spi0_device0, "can", SPI0_BUS_NAME, 1, NULL);
 #endif
 
 #if defined(BSP_USING_SPI0_DEVICE1)
-  rp2040_spi_bus_attach_device(SPI0_BUS_NAME, &spi0_device1);
+  rt_spi_bus_attach_device_cspin(&spi0_device1, "barometer", SPI0_BUS_NAME, 22, NULL);
 #endif
 
 #if defined(BSP_USING_SPI0_DEVICE2)
-  rp2040_spi_bus_attach_device(SPI0_BUS_NAME, &spi0_device2);
+  rt_spi_bus_attach_device_cspin(&spi0_device2, "compass", SPI0_BUS_NAME, 23, NULL);
 #endif
 
 #if defined(BSP_USING_SPI0_DEVICE3)
-  rp2040_spi_bus_attach_device(SPI0_BUS_NAME, &spi0_device3);
+  rt_spi_bus_attach_device_cspin(&spi0_device3, "imu", SPI0_BUS_NAME, 28, NULL);
+  rt_pin_mode(28, PIN_MODE_OUTPUT);
+  rt_pin_write(28, 1);
 #endif
 
 #endif
 
+#if 0
   rp2040_spi_ext_hw_init(&spi1_hw_dev);
   rt_spi_bus_register(&spi1_hw_dev.hw.bus_device, SPI1_BUS_NAME, &rp2040_spi_ext_ops);
   spi1_hw_dev.hw.bus_device.parent.user_data = &spi1_hw_dev;
   rp2040_spi_bus_attach_device(SPI1_BUS_NAME, &spi1_device0);
+#endif
   return RT_EOK;
 }
 

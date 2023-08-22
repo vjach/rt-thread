@@ -10,7 +10,7 @@ include(FetchContent)
 FetchContent_Declare(
     pico_sdk
     GIT_REPOSITORY https://github.com/raspberrypi/pico-sdk.git
-    GIT_TAG 1.4.0
+    GIT_TAG 1.5.1
     GIT_SHALLOW TRUE
     GIT_PROGRESS TRUE
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libraries/pico-sdk

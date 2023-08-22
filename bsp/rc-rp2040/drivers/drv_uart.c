@@ -29,7 +29,7 @@
 
 #define PICO_UART_DEVICE(uart)    (struct pico_uart_dev *)(uart)
 
-static struct pico_uart_dev uart0_dev;
+//static struct pico_uart_dev uart0_dev;
 
 struct pico_uart_dev
 {
@@ -45,7 +45,7 @@ void pico_uart_isr(void)
     /* read interrupt status and clear it */
     if (uart_is_readable(uart0)) /* rx ind */
     {
-        rt_hw_serial_isr(&uart0_dev.parent, RT_SERIAL_EVENT_RX_IND);
+        //rt_hw_serial_isr(&uart0_dev.parent, RT_SERIAL_EVENT_RX_IND);
     }
 
     rt_interrupt_leave();

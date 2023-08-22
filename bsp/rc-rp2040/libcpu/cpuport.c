@@ -31,35 +31,29 @@ int rt_hw_cpu_id(void)
     return sio_hw->cpuid;
 }
 
+volatile uint32_t cnt[2];
 void rt_hw_spin_lock_init(rt_hw_spinlock_t *lock)
 {
-    static uint8_t spin_cnt = 0;
-
-    if ( spin_cnt < 32)
-    {
-        lock->slock = (rt_uint32_t)spin_lock_instance(spin_cnt);
-        spin_cnt = spin_cnt + 1;
-    }
-    else
-    {
-        lock->slock = 0;
-    }
+    cnt[0] = 0;
+    cnt[1] = 0;
+    int lock_num = spin_lock_claim_unused(true);
+    lock->slock = (rt_uint32_t)spin_lock_init(lock_num);
+    
 }
 
 void rt_hw_spin_lock(rt_hw_spinlock_t *lock)
 {
-    if ( lock->slock != 0 )
-    {
-        spin_lock_unsafe_blocking((spin_lock_t*)lock->slock);
+    if (cnt[rt_hw_cpu_id()] > 0) {
+      asm volatile ("BKPT");
     }
+    spin_lock_unsafe_blocking((spin_lock_t*)lock->slock);
+    cnt[rt_hw_cpu_id()]++;
 }
 
 void rt_hw_spin_unlock(rt_hw_spinlock_t *lock)
 {
-    if ( lock->slock != 0 )
-    {
-        spin_unlock_unsafe((spin_lock_t*)lock->slock);
-    }
+    cnt[rt_hw_cpu_id()]--;
+    spin_unlock_unsafe((spin_lock_t*)lock->slock);
 }
 
 void secondary_cpu_c_start(void)
@@ -83,7 +77,7 @@ void rt_hw_secondary_cpu_up(void)
 
 void rt_hw_secondary_cpu_idle_exec(void)
 {
-    asm volatile ("wfi");
+    asm volatile ("nop");
 }
 
 #define IPI_MAGIC 0x5a5a
@@ -152,6 +146,16 @@ void __rt_cpu_switch(rt_ubase_t from, rt_ubase_t to, struct rt_thread *thread)
     {
         rt_hw_spin_unlock(&_cpus_lock);
     }
+
+    if (cpuid == 1 && thread->cpus_lock_nest > 0) {
+      //asm volatile ("BKPT");
+    }
+
+#if 0
+    if (strncmp(thread->parent.name,"main", 4) == 0) {
+      rt_kprintf("cpu : %d on thread: %s\n", cpuid, thread->parent.name);
+    }
+#endif
 }
 
 #endif /*RT_USING_SMP*/
@@ -170,6 +174,7 @@ struct exception_stack_frame
 
 struct stack_frame
 {
+    uint32_t magic;
     /* r4 ~ r7 low register */
     rt_uint32_t r4;
     rt_uint32_t r5;
@@ -220,6 +225,7 @@ rt_uint8_t *rt_hw_stack_init(void       *tentry,
         ((rt_uint32_t *)stack_frame)[i] = 0xdeadbeef;
     }
 
+    stack_frame->magic = 0xD00DBAAF;
     stack_frame->exception_stack_frame.r0  = (unsigned long)parameter; /* r0 : argument */
     stack_frame->exception_stack_frame.r1  = 0;                        /* r1 */
     stack_frame->exception_stack_frame.r2  = 0;                        /* r2 */

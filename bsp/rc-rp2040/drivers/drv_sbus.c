@@ -41,14 +41,14 @@ struct sbus_dev {
   struct rt_device parent;
   rt_uint32_t uart_periph;
   rt_uint32_t irqno;
-  volatile uint8_t offset;
-  volatile uint8_t state;
+  volatile uint32_t offset;
+  volatile uint32_t state;
   struct rt_semaphore data_available;
 
   uint8_t first_buffer[SBUS_BUFFER_SIZE];
   uint8_t second_buffer[SBUS_BUFFER_SIZE];
-  uint8_t* volatile incomplete_buffer; 
-  uint8_t* volatile complete_buffer; 
+  volatile uint8_t* volatile incomplete_buffer; 
+  volatile uint8_t* volatile complete_buffer; 
 };
 
 static struct sbus_dev sbus0_dev;
@@ -66,13 +66,16 @@ static uint8_t* sbus_get_free_buffer(struct sbus_dev* dev) {
 }
 
 void sbus_isr(void) {
+  if (rt_hw_cpu_id() == 1) {
+    asm volatile ("BKPT");
+  }
   rt_interrupt_enter();
   uint32_t mis = uart_get_hw(uart0)->mis;
   switch (sbus0_dev.state) {
     case SBUS_STATE_SYNC:
       /* NOTE: this is self-limited to FIFO size */
       while (uart_is_readable(uart0)) {
-        uart_getc(uart0);
+        (void)uart_getc(uart0);
       }
 
       sbus0_dev.state = SBUS_STATE_IN_PROGRESS;
@@ -83,7 +86,8 @@ void sbus_isr(void) {
     case SBUS_STATE_IN_PROGRESS: 
       if (mis & (SBUS_INT_IDLE | SBUS_INT_RX)) {
         while (uart_is_readable(uart0) && sbus0_dev.offset < SBUS_BUFFER_SIZE) {
-          sbus0_dev.incomplete_buffer[(sbus0_dev.offset)++] = uart_getc(uart0);
+          sbus0_dev.incomplete_buffer[sbus0_dev.offset] = uart_getc(uart0);
+          sbus0_dev.offset++;
         }
 
         bool still_readable = uart_is_readable(uart0);
@@ -96,18 +100,16 @@ void sbus_isr(void) {
           uart_get_hw(uart0)->imsc &= ~SBUS_INT_RX;
         } else if (!still_readable && sbus0_dev.offset == SBUS_BUFFER_SIZE) {
           /* frame completed */
-          sbus0_dev.complete_buffer = sbus0_dev.incomplete_buffer;
-          sbus0_dev.incomplete_buffer = sbus_get_free_buffer(&sbus0_dev);
-          sbus0_dev.offset = 0;
-          /* NOTE:
-           * Documentation asks for rt_interrupt_enter() and
-           * rt_interrupt_leave() to wrap kernel specific calls in ISR. That
-           * will prohibit context switching of a process via interrupt
-           * nesting. However, by doing that, the threads are not woken up, or
-           * woken up too late. A possible workaround is increasing the amount
-           * of ticks per second. Or simply let context switch happen.
-           * */
-          rt_sem_release(&sbus0_dev.data_available);
+
+          if (sbus0_dev.data_available.value <= 1) {
+            sbus0_dev.complete_buffer = sbus0_dev.incomplete_buffer;
+            sbus0_dev.incomplete_buffer = sbus_get_free_buffer(&sbus0_dev);
+            sbus0_dev.offset = 0;
+            rt_sem_release(&sbus0_dev.data_available);
+          } else {
+            /* data is consumed too slow, restart on the same buffer */
+            sbus0_dev.offset = 0;
+          }
         } else if (!still_readable && sbus0_dev.offset < SBUS_BUFFER_SIZE) {
            //keep going
         }
@@ -138,14 +140,13 @@ rt_err_t sbus_open(rt_device_t dev, rt_uint16_t oflag) { return RT_EOK; }
 
 rt_err_t sbus_close(rt_device_t dev) { return RT_EOK; }
 
-static rt_size_t sbus_read(rt_device_t dev, rt_off_t pos, void* buffer,
+static rt_ssize_t sbus_read(rt_device_t dev, rt_off_t pos, void* buffer,
                            rt_size_t size) {
   struct sbus_dev* sbus = (struct sbus_dev*)dev->user_data;
   rt_err_t err = rt_sem_take(&sbus->data_available, RT_WAITING_FOREVER);
   if (err != RT_EOK) {
     return 0;
   }
-
 
   rt_size_t to_copy = size;
   if (to_copy > SBUS_BUFFER_SIZE) {
@@ -154,7 +155,7 @@ static rt_size_t sbus_read(rt_device_t dev, rt_off_t pos, void* buffer,
 
   if (sbus->complete_buffer != RT_NULL) {
     memcpy(buffer, sbus->complete_buffer, to_copy);
-    sbus->complete_buffer = RT_NULL;
+//    sbus->complete_buffer = RT_NULL;
   } else {
     to_copy = 0;
   }
